@@ -24,6 +24,7 @@ venv = ".venv"
 ignore = [
     "otter-ai/src/otter_ai/__init__.py",
 ]
+reportUnusedImport = "warning"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -41,9 +42,6 @@ known-first-party = ["otter_ai", "otter_agent_core"]
 
 [tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["I001"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/otter_mono"]
 
 [build-system]
 requires = ["hatchling"]

@@ -74,6 +74,44 @@ from .api_registry import (  # noqa: F401
 # Environment variable API key resolution
 from .env_api_keys import get_env_api_key  # noqa: F401
 
+# Stream entry points (upstream: export * from "./stream.js")
+# NOTE: stream.py has a side-effect import of register_builtins, so providers
+# are registered the first time any of these are accessed.
+from .stream import (  # noqa: F401
+    complete,
+    complete_simple,
+    stream,
+    stream_simple,
+)
+
+# Lazy stream wrappers and provider management
+# (upstream: export * from "./providers/register-builtins.js")
+from .providers.register_builtins import (  # noqa: F401
+    register_builtin_api_providers,
+    reset_api_providers,
+    set_bedrock_provider_module,
+    stream_anthropic,
+    stream_azure_openai_responses,
+    stream_bedrock,
+    stream_google,
+    stream_google_gemini_cli,
+    stream_google_vertex,
+    stream_mistral,
+    stream_openai_codex_responses,
+    stream_openai_completions,
+    stream_openai_responses,
+    stream_simple_anthropic,
+    stream_simple_azure_openai_responses,
+    stream_simple_bedrock,
+    stream_simple_google,
+    stream_simple_google_gemini_cli,
+    stream_simple_google_vertex,
+    stream_simple_mistral,
+    stream_simple_openai_codex_responses,
+    stream_simple_openai_completions,
+    stream_simple_openai_responses,
+)
+
 # Event stream
 from .utils.event_stream import (  # noqa: F401
     AssistantMessageEventStream,
@@ -93,7 +131,7 @@ from .utils.overflow import (  # noqa: F401
 # Unicode sanitization
 from .utils.sanitize_unicode import sanitize_surrogates  # noqa: F401
 
-# Schema helpers
+# Schema helpers (upstream: export * from "./utils/typebox-helpers.js")
 from .utils.schema_helpers import string_enum_json_schema  # noqa: F401
 
 # Tool call validation
@@ -112,83 +150,21 @@ from .models import (  # noqa: F401
     supports_xhigh,
 )
 
-# Provider options (upstream: export type { XOptions } from "./providers/*.js")
-from .providers.openai_completions import (  # noqa: F401
-    OpenAICompletionsOptions,
-)
-from .providers.openai_responses import (  # noqa: F401
-    OpenAIResponsesOptions,
-)
-from .providers.azure_openai_responses import (  # noqa: F401
-    AzureOpenAIResponsesOptions,
-)
-from .providers.anthropic import (  # noqa: F401
-    AnthropicOptions,
-)
-from .providers.google import (  # noqa: F401
-    GoogleOptions,
-)
-from .providers.google_vertex import (  # noqa: F401
-    GoogleVertexOptions,
-)
-from .providers.mistral import (  # noqa: F401
-    MistralOptions,
-)
-# NOTE: GoogleGeminiCliOptions, OpenAICodexResponsesOptions, and BedrockOptions
-# are not yet exported — blocked on their provider implementations (#13).
-
-# Provider utilities
-from .providers.simple_options import (  # noqa: F401
-    adjust_max_tokens_for_thinking,
-    build_base_options,
-    clamp_reasoning,
-)
-from .providers.transform_messages import transform_messages  # noqa: F401
-from .providers.github_copilot_headers import (  # noqa: F401
-    build_copilot_dynamic_headers,
-    has_copilot_vision_input,
-    infer_copilot_initiator,
-)
-from .providers.openai_completions import (  # noqa: F401
-    convert_messages as convert_messages_openai,
-    stream_openai_completions,
-    stream_simple_openai_completions,
-)
-from .providers.anthropic import (  # noqa: F401
-    convert_messages as convert_messages_anthropic,
-    stream_anthropic,
-    stream_simple_anthropic,
-)
-from .providers.google_shared import (  # noqa: F401
-    convert_messages as convert_messages_google,
-    convert_tools as convert_tools_google,
-    is_thinking_part,
-    map_stop_reason as map_stop_reason_google,
-    map_tool_choice,
-    retain_thought_signature,
-)
-from .providers.google import (  # noqa: F401
-    stream_google,
-    stream_simple_google,
-)
-from .providers.openai_responses_shared import (  # noqa: F401
-    convert_responses_messages,
-    convert_responses_tools,
-    process_responses_stream,
-)
-from .providers.openai_responses import (  # noqa: F401
-    stream_openai_responses,
-    stream_simple_openai_responses,
-)
-from .providers.azure_openai_responses import (  # noqa: F401
-    stream_azure_openai_responses,
-    stream_simple_azure_openai_responses,
-)
-from .providers.google_vertex import (  # noqa: F401
-    stream_google_vertex,
-    stream_simple_google_vertex,
-)
-from .providers.mistral import (  # noqa: F401
-    stream_mistral,
-    stream_simple_mistral,
-)
+# ---------------------------------------------------------------------------
+# Provider Options classes
+#
+# The upstream re-exports these as ``export type { XOptions }`` which is
+# erased at compile time and does NOT trigger module loading.  Python has no
+# equivalent of type-only exports, so importing an Options class from a
+# provider module would eagerly load that provider's SDK.
+#
+# Import them directly from the provider module when needed:
+#   from otter_ai.providers.anthropic import AnthropicOptions
+#   from otter_ai.providers.openai_completions import OpenAICompletionsOptions
+#   etc.
+#
+# Blocked on provider implementations:
+#   GoogleGeminiCliOptions  (#13)
+#   OpenAICodexResponsesOptions  (#13)
+#   BedrockOptions  (#13)
+# ---------------------------------------------------------------------------
