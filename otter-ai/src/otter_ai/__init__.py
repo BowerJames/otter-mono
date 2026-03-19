@@ -146,3 +146,24 @@ from .providers.google import (  # noqa: F401
     stream_google,
     stream_simple_google,
 )
+from .providers.openai_responses_shared import (  # noqa: F401
+    convert_responses_messages,
+    convert_responses_tools,
+    process_responses_stream,
+)
+from .providers.openai_responses import (  # noqa: F401
+    stream_openai_responses,
+    stream_simple_openai_responses,
+)
+from .providers.azure_openai_responses import (  # noqa: F401
+    stream_azure_openai_responses,
+    stream_simple_azure_openai_responses,
+)
+from .providers.google_vertex import (  # noqa: F401
+    stream_google_vertex,
+    stream_simple_google_vertex,
+)
+from .providers.mistral import (  # noqa: F401
+    stream_mistral,
+    stream_simple_mistral,
+)
