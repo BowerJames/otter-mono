@@ -119,3 +119,13 @@ from .providers.simple_options import (  # noqa: F401
     clamp_reasoning,
 )
 from .providers.transform_messages import transform_messages  # noqa: F401
+from .providers.github_copilot_headers import (  # noqa: F401
+    build_copilot_dynamic_headers,
+    has_copilot_vision_input,
+    infer_copilot_initiator,
+)
+from .providers.openai_completions import (  # noqa: F401
+    convert_messages,
+    stream_openai_completions,
+    stream_simple_openai_completions,
+)
