@@ -9,6 +9,10 @@
 
 Python replication of [badlogic/pi-mono](https://github.com/badlogic/pi-mono), specifically the **pi-ai** and **pi-agent-core** crates. Naming convention: `pi` → `otter`.
 
+### Design Decisions
+
+- **[DECISIONS.md](DECISIONS.md)** documents all deliberate deviations from the upstream TypeScript implementation and the reasoning behind each choice (schema system, concurrency model, naming conventions, HTTP client, etc.). Consult it before implementing new modules to ensure consistency.
+
 ### Key Conventions
 
 - Follow the upstream pi-mono architecture and module boundaries when implementing otter equivalents. This work should be as close as possible to an exact replica written in python.
