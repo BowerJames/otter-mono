@@ -167,7 +167,7 @@ class AgentLoopConfig:
 
     transform_context: (
         Callable[
-            [list[AgentMessage]],
+            [list[AgentMessage], Any],
             list[AgentMessage] | Awaitable[list[AgentMessage]],
         ]
         | None
@@ -177,6 +177,9 @@ class AgentLoopConfig:
     Use for operations that work at the AgentMessage level:
     - Context window management (pruning old messages)
     - Injecting context from external sources
+
+    The second argument is an optional cancellation token (``asyncio.Event``
+    or ``None``).
 
     Contract: must not raise.  Return the original messages or another safe
     fallback value instead.
@@ -242,7 +245,7 @@ class AgentLoopConfig:
 
     before_tool_call: (
         Callable[
-            [BeforeToolCallContext],
+            [BeforeToolCallContext, Any],
             BeforeToolCallResult | None | Awaitable[BeforeToolCallResult | None],
         ]
         | None
@@ -251,11 +254,13 @@ class AgentLoopConfig:
 
     Return ``BeforeToolCallResult(block=True)`` to prevent execution.
     The loop emits an error tool result instead.
+
+    The second argument is an optional cancellation token.
     """
 
     after_tool_call: (
         Callable[
-            [AfterToolCallContext],
+            [AfterToolCallContext, Any],
             AfterToolCallResult | None | Awaitable[AfterToolCallResult | None],
         ]
         | None
@@ -265,6 +270,8 @@ class AgentLoopConfig:
     Return an :class:`AfterToolCallResult` to override parts of the
     executed tool result.  Any omitted fields keep their original values.
     No deep merge is performed.
+
+    The second argument is an optional cancellation token.
     """
 
     # ------------------------------------------------------------------
