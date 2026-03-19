@@ -1,4 +1,5 @@
-.pi/
+.pi/*
+!.pi/skills/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

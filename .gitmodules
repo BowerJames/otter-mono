@@ -1,0 +1,3 @@
+[submodule ".pi/skills/uv"]
+	path = .pi/skills/uv
+	url = https://github.com/nicobailey/uv-skill
