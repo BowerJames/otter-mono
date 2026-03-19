@@ -2579,11 +2579,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2602,11 +2602,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2625,11 +2625,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2648,11 +2648,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2671,11 +2671,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2694,11 +2694,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2717,11 +2717,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=False,
             input=["text", "image"],
             cost=ModelCost(
@@ -2733,9 +2733,7 @@ MODELS: dict[str, dict[str, Model]] = {
             context_window=128000,
             max_tokens=64000,
             compat=OpenAICompletionsCompat(
-                supports_store=False,
-                supports_developer_role=False,
-                supports_reasoning_effort=False
+                supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
             ),
         ),
         "gemini-3-flash-preview": Model(
@@ -2745,11 +2743,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2761,9 +2759,7 @@ MODELS: dict[str, dict[str, Model]] = {
             context_window=128000,
             max_tokens=64000,
             compat=OpenAICompletionsCompat(
-                supports_store=False,
-                supports_developer_role=False,
-                supports_reasoning_effort=False
+                supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
             ),
         ),
         "gemini-3-pro-preview": Model(
@@ -2773,11 +2769,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2789,9 +2785,7 @@ MODELS: dict[str, dict[str, Model]] = {
             context_window=128000,
             max_tokens=64000,
             compat=OpenAICompletionsCompat(
-                supports_store=False,
-                supports_developer_role=False,
-                supports_reasoning_effort=False
+                supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
             ),
         ),
         "gemini-3.1-pro-preview": Model(
@@ -2801,11 +2795,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2817,9 +2811,7 @@ MODELS: dict[str, dict[str, Model]] = {
             context_window=128000,
             max_tokens=64000,
             compat=OpenAICompletionsCompat(
-                supports_store=False,
-                supports_developer_role=False,
-                supports_reasoning_effort=False
+                supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
             ),
         ),
         "gpt-4.1": Model(
@@ -2829,11 +2821,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=False,
             input=["text", "image"],
             cost=ModelCost(
@@ -2845,9 +2837,7 @@ MODELS: dict[str, dict[str, Model]] = {
             context_window=64000,
             max_tokens=16384,
             compat=OpenAICompletionsCompat(
-                supports_store=False,
-                supports_developer_role=False,
-                supports_reasoning_effort=False
+                supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
             ),
         ),
         "gpt-4o": Model(
@@ -2857,11 +2847,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=False,
             input=["text", "image"],
             cost=ModelCost(
@@ -2873,9 +2863,7 @@ MODELS: dict[str, dict[str, Model]] = {
             context_window=64000,
             max_tokens=16384,
             compat=OpenAICompletionsCompat(
-                supports_store=False,
-                supports_developer_role=False,
-                supports_reasoning_effort=False
+                supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
             ),
         ),
         "gpt-5": Model(
@@ -2885,11 +2873,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2908,11 +2896,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2931,11 +2919,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2954,11 +2942,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -2977,11 +2965,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -3000,11 +2988,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -3023,11 +3011,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -3046,11 +3034,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -3069,11 +3057,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -3092,11 +3080,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -3115,11 +3103,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text", "image"],
             cost=ModelCost(
@@ -3138,11 +3126,11 @@ MODELS: dict[str, dict[str, Model]] = {
             provider="github-copilot",
             base_url="https://api.individual.githubcopilot.com",
             headers={
-        "User-Agent": "GitHubCopilotChat/0.35.0",
-        "Editor-Version": "vscode/1.107.0",
-        "Editor-Plugin-Version": "copilot-chat/0.35.0",
-        "Copilot-Integration-Id": "vscode-chat"
-    },
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+                "Editor-Version": "vscode/1.107.0",
+                "Editor-Plugin-Version": "copilot-chat/0.35.0",
+                "Copilot-Integration-Id": "vscode-chat",
+            },
             reasoning=True,
             input=["text"],
             cost=ModelCost(
@@ -3154,9 +3142,7 @@ MODELS: dict[str, dict[str, Model]] = {
             context_window=128000,
             max_tokens=64000,
             compat=OpenAICompletionsCompat(
-                supports_store=False,
-                supports_developer_role=False,
-                supports_reasoning_effort=False
+                supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
             ),
         ),
     },
@@ -4309,9 +4295,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=204800,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "MiniMaxAI/MiniMax-M2.5": Model(
             id="MiniMaxAI/MiniMax-M2.5",
@@ -4329,9 +4313,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=204800,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "Qwen/Qwen3-235B-A22B-Thinking-2507": Model(
             id="Qwen/Qwen3-235B-A22B-Thinking-2507",
@@ -4349,9 +4331,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "Qwen/Qwen3-Coder-480B-A35B-Instruct": Model(
             id="Qwen/Qwen3-Coder-480B-A35B-Instruct",
@@ -4369,9 +4349,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=66536,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "Qwen/Qwen3-Coder-Next": Model(
             id="Qwen/Qwen3-Coder-Next",
@@ -4389,9 +4367,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=65536,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "Qwen/Qwen3-Next-80B-A3B-Instruct": Model(
             id="Qwen/Qwen3-Next-80B-A3B-Instruct",
@@ -4409,9 +4385,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=66536,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "Qwen/Qwen3-Next-80B-A3B-Thinking": Model(
             id="Qwen/Qwen3-Next-80B-A3B-Thinking",
@@ -4429,9 +4403,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "Qwen/Qwen3.5-397B-A17B": Model(
             id="Qwen/Qwen3.5-397B-A17B",
@@ -4449,9 +4421,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=32768,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "XiaomiMiMo/MiMo-V2-Flash": Model(
             id="XiaomiMiMo/MiMo-V2-Flash",
@@ -4469,9 +4439,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=4096,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "deepseek-ai/DeepSeek-R1-0528": Model(
             id="deepseek-ai/DeepSeek-R1-0528",
@@ -4489,9 +4457,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=163840,
             max_tokens=163840,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "deepseek-ai/DeepSeek-V3.2": Model(
             id="deepseek-ai/DeepSeek-V3.2",
@@ -4509,9 +4475,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=163840,
             max_tokens=65536,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "moonshotai/Kimi-K2-Instruct": Model(
             id="moonshotai/Kimi-K2-Instruct",
@@ -4529,9 +4493,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=131072,
             max_tokens=16384,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "moonshotai/Kimi-K2-Instruct-0905": Model(
             id="moonshotai/Kimi-K2-Instruct-0905",
@@ -4549,9 +4511,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=16384,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "moonshotai/Kimi-K2-Thinking": Model(
             id="moonshotai/Kimi-K2-Thinking",
@@ -4569,9 +4529,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=262144,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "moonshotai/Kimi-K2.5": Model(
             id="moonshotai/Kimi-K2.5",
@@ -4589,9 +4547,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=262144,
             max_tokens=262144,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "zai-org/GLM-4.7": Model(
             id="zai-org/GLM-4.7",
@@ -4609,9 +4565,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=204800,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "zai-org/GLM-4.7-Flash": Model(
             id="zai-org/GLM-4.7-Flash",
@@ -4629,9 +4583,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=200000,
             max_tokens=128000,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
         "zai-org/GLM-5": Model(
             id="zai-org/GLM-5",
@@ -4649,9 +4601,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=202752,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False),
         ),
     },
     "kimi-coding": {
@@ -13720,10 +13670,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=131072,
             max_tokens=98304,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-4.5-air": Model(
             id="glm-4.5-air",
@@ -13741,10 +13688,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=131072,
             max_tokens=98304,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-4.5-flash": Model(
             id="glm-4.5-flash",
@@ -13762,10 +13706,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=131072,
             max_tokens=98304,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-4.5v": Model(
             id="glm-4.5v",
@@ -13783,10 +13724,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=64000,
             max_tokens=16384,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-4.6": Model(
             id="glm-4.6",
@@ -13804,10 +13742,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=204800,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-4.6v": Model(
             id="glm-4.6v",
@@ -13825,10 +13760,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=128000,
             max_tokens=32768,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-4.7": Model(
             id="glm-4.7",
@@ -13846,10 +13778,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=204800,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-4.7-flash": Model(
             id="glm-4.7-flash",
@@ -13867,10 +13796,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=200000,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-5": Model(
             id="glm-5",
@@ -13888,10 +13814,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=204800,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
         "glm-5-turbo": Model(
             id="glm-5-turbo",
@@ -13909,10 +13832,7 @@ MODELS: dict[str, dict[str, Model]] = {
             ),
             context_window=200000,
             max_tokens=131072,
-            compat=OpenAICompletionsCompat(
-                supports_developer_role=False,
-                thinking_format="zai"
-            ),
+            compat=OpenAICompletionsCompat(supports_developer_role=False, thinking_format="zai"),
         ),
     },
 }

@@ -85,10 +85,7 @@ def calculate_cost(model: Model, usage: Usage) -> UsageCost:
     usage.cost.cache_read = (model.cost.cache_read / 1_000_000) * usage.cache_read
     usage.cost.cache_write = (model.cost.cache_write / 1_000_000) * usage.cache_write
     usage.cost.total = (
-        usage.cost.input
-        + usage.cost.output
-        + usage.cost.cache_read
-        + usage.cost.cache_write
+        usage.cost.input + usage.cost.output + usage.cost.cache_read + usage.cost.cache_write
     )
     return usage.cost
 
@@ -106,11 +103,7 @@ def supports_xhigh(model: Model) -> bool:
     - Opus 4.6 models (xhigh maps to adaptive effort "max" on
       Anthropic-compatible providers)
     """
-    if (
-        "gpt-5.2" in model.id
-        or "gpt-5.3" in model.id
-        or "gpt-5.4" in model.id
-    ):
+    if "gpt-5.2" in model.id or "gpt-5.3" in model.id or "gpt-5.4" in model.id:
         return True
 
     return "opus-4-6" in model.id or "opus-4.6" in model.id

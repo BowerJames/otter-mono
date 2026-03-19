@@ -101,13 +101,13 @@ def _parse_model_block(lines: list[str]) -> dict[str, str] | None:
             i += 1
             continue
 
-        if m := re.match(r'(\w+):\s*\[(.*)\],', line):
+        if m := re.match(r"(\w+):\s*\[(.*)\],", line):
             fields[m.group(1)] = m.group(2)
             i += 1
             continue
 
         # headers field (JSON object on one line)
-        if m := re.match(r'(\w+):\s*(\{.*\}),', line):
+        if m := re.match(r"(\w+):\s*(\{.*\}),", line):
             fields[m.group(1)] = m.group(2)
             i += 1
             continue
@@ -127,7 +127,7 @@ def _parse_model_block(lines: list[str]) -> dict[str, str] | None:
                 i += 1
             cost_str = "".join(cost_lines)
             cost_fields: dict[str, str] = {}
-            for cm in re.finditer(r'(\w+):\s*([0-9.]+),?', cost_str):
+            for cm in re.finditer(r"(\w+):\s*([0-9.]+),?", cost_str):
                 cost_fields[cm.group(1)] = cm.group(2)
             fields["cost"] = cost_fields
             i += 1  # skip closing brace
@@ -160,9 +160,7 @@ def parse_generated_ts(source: str) -> dict[str, dict[str, dict[str, str]]]:
         provider_models: dict[str, dict[str, str]] = {}
         for midx, (mstart, model_id) in enumerate(model_starts):
             mend = (
-                model_starts[midx + 1][0]
-                if midx + 1 < len(model_starts)
-                else len(provider_block)
+                model_starts[midx + 1][0] if midx + 1 < len(model_starts) else len(provider_block)
             )
             model_block = provider_block[mstart:mend]
             lines = model_block.split("\n")
@@ -183,10 +181,10 @@ def generate_python(models: dict[str, dict[str, dict[str, str]]]) -> str:
     parts.append("")
     parts.append("DO NOT EDIT MANUALLY — regenerate via::")
     parts.append("")
-    parts.append('    uv run python otter-ai/scripts/generate_models.py')
+    parts.append("    uv run python otter-ai/scripts/generate_models.py")
     parts.append("")
     parts.append("Upstream reference:")
-    parts.append('    packages/ai/src/models.generated.ts')
+    parts.append("    packages/ai/src/models.generated.ts")
     parts.append('"""')
     parts.append("")
     parts.append("from __future__ import annotations")
