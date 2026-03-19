@@ -102,6 +102,16 @@ from .utils.validation import (  # noqa: F401
     validate_tool_call,
 )
 
+# Model registry and utilities
+from .models import (  # noqa: F401
+    calculate_cost,
+    get_model,
+    get_models,
+    get_providers,
+    models_are_equal,
+    supports_xhigh,
+)
+
 # Provider utilities
 from .providers.simple_options import (  # noqa: F401
     adjust_max_tokens_for_thinking,
