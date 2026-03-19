@@ -1,0 +1,19 @@
+[project]
+name = "otter-agent-core"
+version = "0.1.0"
+description = "Agent runtime with tool calling and state management"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    "otter-ai",
+]
+
+[tool.uv.sources]
+otter-ai = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/otter_agent_core"]

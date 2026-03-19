@@ -1,0 +1,41 @@
+[project]
+name = "otter-mono"
+version = "0.0.1"
+description = "Python replication of pi-mono — tools for building AI agents and managing LLM deployments"
+requires-python = ">=3.12"
+license = "MIT"
+
+[tool.uv.workspace]
+members = ["otter-ai", "otter-agent-core"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pyright>=1.1",
+    "ruff>=0.9",
+]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = []
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "SIM"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/otter_mono"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
