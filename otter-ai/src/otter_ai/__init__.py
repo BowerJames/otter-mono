@@ -125,7 +125,12 @@ from .providers.github_copilot_headers import (  # noqa: F401
     infer_copilot_initiator,
 )
 from .providers.openai_completions import (  # noqa: F401
-    convert_messages,
+    convert_messages as convert_messages_openai,
     stream_openai_completions,
     stream_simple_openai_completions,
+)
+from .providers.anthropic import (  # noqa: F401
+    convert_messages as convert_messages_anthropic,
+    stream_anthropic,
+    stream_simple_anthropic,
 )

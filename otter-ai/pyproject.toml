@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-core>=2.27",
     "partial-json-parser>=0.2",
     "openai>=2.29.0",
+    "anthropic>=0.86.0",
 ]
 
 [build-system]
