@@ -134,3 +134,15 @@ from .providers.anthropic import (  # noqa: F401
     stream_anthropic,
     stream_simple_anthropic,
 )
+from .providers.google_shared import (  # noqa: F401
+    convert_messages as convert_messages_google,
+    convert_tools as convert_tools_google,
+    is_thinking_part,
+    map_stop_reason as map_stop_reason_google,
+    map_tool_choice,
+    retain_thought_signature,
+)
+from .providers.google import (  # noqa: F401
+    stream_google,
+    stream_simple_google,
+)
