@@ -50,7 +50,7 @@ _OPENAI_TOOL_CALL_PROVIDERS = frozenset(["openai", "openai-codex", "opencode"])
 def _resolve_cache_retention(cache_retention: str | None) -> str:
     if cache_retention:
         return cache_retention
-    if os.environ.get("OTTER_CACHE_RETENTION") == "long":
+    if os.environ.get("PI_CACHE_RETENTION") == "long":
         return "long"
     return "short"
 

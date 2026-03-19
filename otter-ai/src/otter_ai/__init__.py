@@ -128,8 +128,8 @@ from .utils.overflow import (  # noqa: F401
     is_context_overflow,
 )
 
-# Unicode sanitization
-from .utils.sanitize_unicode import sanitize_surrogates  # noqa: F401
+# NOTE: sanitize_surrogates is an internal utility not re-exported upstream.
+# Import directly from otter_ai.utils.sanitize_unicode if needed.
 
 # Schema helpers (upstream: export * from "./utils/typebox-helpers.js")
 from .utils.schema_helpers import string_enum_json_schema  # noqa: F401
@@ -158,13 +158,19 @@ from .models import (  # noqa: F401
 # equivalent of type-only exports, so importing an Options class from a
 # provider module would eagerly load that provider's SDK.
 #
-# Import them directly from the provider module when needed:
+# For provider-specific typed options, import directly from the provider module:
 #   from otter_ai.providers.anthropic import AnthropicOptions
-#   from otter_ai.providers.openai_completions import OpenAICompletionsOptions
 #   etc.
 #
-# Blocked on provider implementations:
-#   GoogleGeminiCliOptions  (#13)
-#   OpenAICodexResponsesOptions  (#13)
-#   BedrockOptions  (#13)
+# Still missing (blocked on #13):
+#   GoogleGeminiCliOptions   — google-gemini-cli provider not yet implemented
+#   OpenAICodexResponsesOptions — openai-codex-responses provider not yet implemented
+#   BedrockOptions           — amazon-bedrock provider not yet implemented (#42)
 # ---------------------------------------------------------------------------
+from .providers.anthropic import AnthropicOptions  # noqa: F401
+from .providers.azure_openai_responses import AzureOpenAIResponsesOptions  # noqa: F401
+from .providers.google import GoogleOptions  # noqa: F401
+from .providers.google_vertex import GoogleVertexOptions  # noqa: F401
+from .providers.mistral import MistralOptions  # noqa: F401
+from .providers.openai_completions import OpenAICompletionsOptions  # noqa: F401
+from .providers.openai_responses import OpenAIResponsesOptions  # noqa: F401

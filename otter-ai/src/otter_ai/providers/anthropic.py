@@ -64,11 +64,11 @@ from .transform_messages import transform_messages
 def resolve_cache_retention(cache_retention: CacheRetention | None) -> CacheRetention:
     """Resolve cache retention preference.
 
-    Defaults to "short" and uses OTTER_CACHE_RETENTION for backward compatibility.
+    Defaults to "short" and uses PI_CACHE_RETENTION to match upstream.
     """
     if cache_retention:
         return cache_retention
-    if os.environ.get("OTTER_CACHE_RETENTION") == "long":
+    if os.environ.get("PI_CACHE_RETENTION") == "long":
         return "long"
     return "short"
 

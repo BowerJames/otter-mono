@@ -202,4 +202,56 @@ This document captures deliberate deviations from the upstream [pi-mono](https:/
 - No Python equivalent to npm scoped packages.
 - Hyphenated names follow PyPI convention.
 - Import names use underscores: `otter_ai`, `otter_agent_core`.
+
+---
+
+## 9. ProviderStreamOptions (Intersection Type)
+
+**Upstream:** `type ProviderStreamOptions = StreamOptions & Record<string, unknown>` — allows callers to pass arbitrary extra fields through the generic `stream()` entry point.
+
+**Decision:** `type ProviderStreamOptions = StreamOptions` (no extra fields).
+
+**Rationale:**
+- Python has no equivalent of TypeScript's intersection with `Record<string, unknown>`.
+- TypedDict with `**kwargs` would lose type safety without gaining much.
+- The lazy-loading pattern already encourages callers to use provider-specific stream functions (e.g., `stream_anthropic()`) which accept the fully-typed `AnthropicOptions`.
+- The generic `stream()` entry point still works for base `StreamOptions` use cases.
+
+**Impact:**
+- Provider-specific options (e.g., `AnthropicOptions`) cannot be passed through `stream()`.
+- Callers must use provider-specific stream functions for typed options.
+
+---
+
+## 10. Environment Variable Names
+
+**Upstream:** Uses `PI_CACHE_RETENTION` and similar `PI_`-prefixed environment variables.
+
+**Decision:** Use the same upstream `PI_`-prefixed environment variable names.
+
+**Rationale:**
+- Keeping the upstream env var names ensures consistency with upstream documentation, examples, and debugging guides.
+- The `otter` naming convention applies to Python package/module names, not runtime configuration.
+- Users referencing upstream documentation will find the same env var names.
+
+**Impact:**
+- `PI_CACHE_RETENTION` is used in Anthropic and OpenAI Responses providers (not `OTTER_CACHE_RETENTION`).
+- Future env vars should follow the upstream naming unless there is a compelling Python-specific reason to differ.
+
+---
+
+## 11. Model Data Generation Script
+
+**Upstream:** `generate-models.ts` (~1,600 lines) fetches model data from a `models-dev.json` source file and generates `models.generated.ts` from scratch.
+
+**Decision:** `generate_models.py` (~250 lines) parses the upstream's already-generated `models.generated.ts` TypeScript output and converts it to Python `models_generated.py`.
+
+**Rationale:**
+- Model data originates from the upstream pi-mono project; otter-mono consumes it, not produces it.
+- Parsing the generated TS file is simpler and avoids duplicating the upstream's data-fetching and validation logic.
+- When upstream adds new models, regenerating otter's output is a single command against the updated upstream checkout.
+
+**Impact:**
+- Cannot generate new model data independently — requires the upstream `models.generated.ts` to exist first.
+- The regex-based TS parser may need updates if the upstream output format changes significantly.
 EOF

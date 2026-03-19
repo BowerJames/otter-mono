@@ -12,6 +12,7 @@ from __future__ import annotations
 # Upstream: ``import "./providers/register-builtins.js";``
 import otter_ai.providers.register_builtins  # noqa: F401
 from otter_ai.api_registry import get_api_provider
+from otter_ai.env_api_keys import get_env_api_key  # noqa: F401 — upstream re-exports from stream.ts
 from otter_ai.types import (
     AssistantMessage,
     Context,
