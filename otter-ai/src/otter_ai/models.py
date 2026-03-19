@@ -14,8 +14,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from otter_ai.models_generated import MODELS
+
 if TYPE_CHECKING:
     from otter_ai.types import Model, Usage, UsageCost
+
 
 # ============================================================================
 # Model Registry
@@ -23,15 +26,9 @@ if TYPE_CHECKING:
 
 _registry: dict[str, dict[str, Model]] = {}
 
-
-def init_registry(models: dict[str, dict[str, Model]]) -> None:
-    """Populate the model registry from a ``MODELS`` dict.
-
-    Called once at module load time by ``models_generated.py``.
-    """
-    _registry.clear()
-    for provider, provider_models in models.items():
-        _registry[provider] = dict(provider_models)
+# Initialize registry from MODELS on module load (matching upstream).
+for _provider, _models in MODELS.items():
+    _registry[_provider] = dict(_models)
 
 
 def get_model(provider: str, model_id: str) -> Model:
@@ -116,10 +113,7 @@ def supports_xhigh(model: Model) -> bool:
     ):
         return True
 
-    if "opus-4-6" in model.id or "opus-4.6" in model.id:
-        return True
-
-    return False
+    return "opus-4-6" in model.id or "opus-4.6" in model.id
 
 
 # ============================================================================
