@@ -11,7 +11,6 @@ Python replication of [badlogic/pi-mono](https://github.com/badlogic/pi-mono), s
 
 ### Key Conventions
 
-- Follow the upstream pi-mono architecture and module boundaries when implementing otter equivalents.
-- Port idiomatic Rust patterns into idiomatic Python (e.g., enums → `StrEnum`/`Enum`, traits → protocols/ABCs, `Result<T,E>` → exceptions or `Result` type).
+- Follow the upstream pi-mono architecture and module boundaries when implementing otter equivalents. This work should be as close as possible to an exact replica written in python.
 - Type hints are required; use `pyright` for static checking.
 - When referencing upstream code, structure and naming should mirror pi-mono with the `pi` → `otter` substitution.
