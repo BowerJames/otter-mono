@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from dataclasses import dataclass
 from typing import Any
 
 import openai
@@ -21,9 +22,11 @@ from otter_ai.types import (
     AssistantMessageEventDone,
     AssistantMessageEventError,
     AssistantMessageEventStart,
+    StreamOptions,
     Usage,
 )
 from otter_ai.utils.event_stream import AssistantMessageEventStream
+
 from .openai_responses_shared import (
     convert_responses_messages,
     convert_responses_tools,
@@ -43,41 +46,19 @@ _DEFAULT_AZURE_API_VERSION = "v1"
 # ============================================================================
 
 
-class AzureOpenAIResponsesOptions:
-    """Options for Azure OpenAI Responses API streaming."""
+@dataclass
+class AzureOpenAIResponsesOptions(StreamOptions):
+    """Options for Azure OpenAI Responses API streaming.
 
-    def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
-        signal: Any | None = None,
-        headers: dict[str, str] | None = None,
-        on_payload: Any | None = None,
-        metadata: dict[str, Any] | None = None,
-        session_id: str | None = None,
-        reasoning_effort: str | None = None,
-        reasoning_summary: str | None = None,
-        azure_api_version: str | None = None,
-        azure_resource_name: str | None = None,
-        azure_base_url: str | None = None,
-        azure_deployment_name: str | None = None,
-    ) -> None:
-        self.api_key = api_key
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.signal = signal
-        self.headers = headers
-        self.on_payload = on_payload
-        self.metadata = metadata
-        self.session_id = session_id
-        self.reasoning_effort = reasoning_effort
-        self.reasoning_summary = reasoning_summary
-        self.azure_api_version = azure_api_version
-        self.azure_resource_name = azure_resource_name
-        self.azure_base_url = azure_base_url
-        self.azure_deployment_name = azure_deployment_name
+    Upstream: ``interface AzureOpenAIResponsesOptions extends StreamOptions``
+    """
+
+    reasoning_effort: str | None = None
+    reasoning_summary: str | None = None
+    azure_api_version: str | None = None
+    azure_resource_name: str | None = None
+    azure_base_url: str | None = None
+    azure_deployment_name: str | None = None
 
 
 # ============================================================================

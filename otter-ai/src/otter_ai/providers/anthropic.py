@@ -37,6 +37,7 @@ from otter_ai.types import (
     Model,
     SimpleStreamOptions,
     StopReason,
+    StreamOptions,
     TextContent,
     ThinkingContent,
     Tool,
@@ -54,7 +55,6 @@ from .github_copilot_headers import (
 )
 from .simple_options import adjust_max_tokens_for_thinking, build_base_options
 from .transform_messages import transform_messages
-
 
 # ============================================================================
 # Cache control
@@ -149,44 +149,21 @@ def _from_claude_code_name(name: str, tools: list[Tool] | None) -> str:
 AnthropicEffort = Literal["low", "medium", "high", "max"]
 
 
-class AnthropicOptions:
+@dataclass
+class AnthropicOptions(StreamOptions):
     """Options for Anthropic streaming.
 
     Extends the base stream options with Anthropic-specific features.
+
+    Upstream: ``interface AnthropicOptions extends StreamOptions``
     """
 
-    def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
-        signal: Any | None = None,
-        headers: dict[str, str] | None = None,
-        on_payload: Any | None = None,
-        metadata: dict[str, Any] | None = None,
-        cache_retention: CacheRetention | None = None,
-        thinking_enabled: bool = False,
-        thinking_budget_tokens: int | None = None,
-        effort: AnthropicEffort | None = None,
-        interleaved_thinking: bool = True,
-        tool_choice: str | dict[str, Any] | None = None,
-        client: anthropic.Anthropic | None = None,
-    ) -> None:
-        self.api_key = api_key
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.signal = signal
-        self.headers = headers
-        self.on_payload = on_payload
-        self.metadata = metadata
-        self.cache_retention = cache_retention
-        self.thinking_enabled = thinking_enabled
-        self.thinking_budget_tokens = thinking_budget_tokens
-        self.effort = effort
-        self.interleaved_thinking = interleaved_thinking
-        self.tool_choice = tool_choice
-        self.client = client
+    thinking_enabled: bool = False
+    thinking_budget_tokens: int | None = None
+    effort: AnthropicEffort | None = None
+    interleaved_thinking: bool = True
+    tool_choice: str | dict[str, Any] | None = None
+    client: anthropic.Anthropic | None = None
 
 
 # ============================================================================

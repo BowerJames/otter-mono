@@ -11,6 +11,7 @@ import json
 import os
 import re
 import time
+from dataclasses import dataclass
 from typing import Any, Literal
 
 from google import genai
@@ -33,6 +34,7 @@ from otter_ai.types import (
     Context,
     Model,
     SimpleStreamOptions,
+    StreamOptions,
     TextContent,
     ThinkingBudgets,
     ThinkingContent,
@@ -68,35 +70,17 @@ _tool_call_counter = 0
 # ============================================================================
 
 
-class GoogleVertexOptions:
-    """Options for Google Vertex AI streaming."""
+@dataclass
+class GoogleVertexOptions(StreamOptions):
+    """Options for Google Vertex AI streaming.
 
-    def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
-        signal: Any | None = None,
-        headers: dict[str, str] | None = None,
-        on_payload: Any | None = None,
-        metadata: dict[str, Any] | None = None,
-        tool_choice: str | None = None,
-        thinking: dict[str, Any] | None = None,
-        project: str | None = None,
-        location: str | None = None,
-    ) -> None:
-        self.api_key = api_key
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.signal = signal
-        self.headers = headers
-        self.on_payload = on_payload
-        self.metadata = metadata
-        self.tool_choice = tool_choice
-        self.thinking = thinking
-        self.project = project
-        self.location = location
+    Upstream: ``interface GoogleVertexOptions extends StreamOptions``
+    """
+
+    tool_choice: str | None = None
+    thinking: dict[str, Any] | None = None
+    project: str | None = None
+    location: str | None = None
 
 
 # ============================================================================

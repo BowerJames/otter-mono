@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import time
+from dataclasses import dataclass
 from typing import Any
 
 from mistralai.client import Mistral
@@ -32,6 +33,7 @@ from otter_ai.types import (
     Context,
     Model,
     SimpleStreamOptions,
+    StreamOptions,
     TextContent,
     ThinkingContent,
     Tool,
@@ -42,6 +44,7 @@ from otter_ai.utils.event_stream import AssistantMessageEventStream
 from otter_ai.utils.hash import short_hash
 from otter_ai.utils.json_parse import parse_streaming_json
 from otter_ai.utils.sanitize_unicode import sanitize_surrogates
+
 from .simple_options import build_base_options, clamp_reasoning
 from .transform_messages import transform_messages
 
@@ -54,33 +57,15 @@ _MAX_MISTRAL_ERROR_BODY_CHARS = 4000
 # ============================================================================
 
 
-class MistralOptions:
-    """Options for Mistral streaming."""
+@dataclass
+class MistralOptions(StreamOptions):
+    """Options for Mistral streaming.
 
-    def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
-        signal: Any | None = None,
-        headers: dict[str, str] | None = None,
-        on_payload: Any | None = None,
-        metadata: dict[str, Any] | None = None,
-        session_id: str | None = None,
-        tool_choice: str | dict[str, Any] | None = None,
-        prompt_mode: str | None = None,
-    ) -> None:
-        self.api_key = api_key
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.signal = signal
-        self.headers = headers
-        self.on_payload = on_payload
-        self.metadata = metadata
-        self.session_id = session_id
-        self.tool_choice = tool_choice
-        self.prompt_mode = prompt_mode
+    Upstream: ``interface MistralOptions extends StreamOptions``
+    """
+
+    tool_choice: str | dict[str, Any] | None = None
+    prompt_mode: str | None = None
 
 
 # ============================================================================
@@ -121,7 +106,6 @@ def _derive_mistral_tool_call_id(tool_call_id: str, attempt: int) -> str:
 
 
 import re
-
 
 # ============================================================================
 # Error formatting

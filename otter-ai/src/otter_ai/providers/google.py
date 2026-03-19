@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import re
 import time
+from dataclasses import dataclass
 from typing import Any, Literal
 
 from google import genai
@@ -21,6 +22,7 @@ from otter_ai.types import (
     Context,
     Model,
     SimpleStreamOptions,
+    StreamOptions,
     TextContent,
     ThinkingBudgets,
     ThinkingContent,
@@ -40,7 +42,6 @@ from .google_shared import (
 )
 from .simple_options import build_base_options, clamp_reasoning
 
-
 # ============================================================================
 # Types
 # ============================================================================
@@ -54,31 +55,15 @@ GoogleThinkingLevel = Literal[
 ]
 
 
-class GoogleOptions:
-    """Options for Google Generative AI streaming."""
+@dataclass
+class GoogleOptions(StreamOptions):
+    """Options for Google Generative AI streaming.
 
-    def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
-        signal: Any | None = None,
-        headers: dict[str, str] | None = None,
-        on_payload: Any | None = None,
-        metadata: dict[str, Any] | None = None,
-        tool_choice: str | None = None,
-        thinking: dict[str, Any] | None = None,
-    ) -> None:
-        self.api_key = api_key
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.signal = signal
-        self.headers = headers
-        self.on_payload = on_payload
-        self.metadata = metadata
-        self.tool_choice = tool_choice
-        self.thinking = thinking
+    Upstream: ``interface GoogleOptions extends StreamOptions``
+    """
+
+    tool_choice: str | None = None
+    thinking: dict[str, Any] | None = None
 
 
 # ============================================================================

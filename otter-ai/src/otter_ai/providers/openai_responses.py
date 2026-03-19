@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from dataclasses import dataclass
 from typing import Any
 
 import openai
@@ -21,9 +22,11 @@ from otter_ai.types import (
     AssistantMessageEventDone,
     AssistantMessageEventError,
     AssistantMessageEventStart,
+    StreamOptions,
     Usage,
 )
 from otter_ai.utils.event_stream import AssistantMessageEventStream
+
 from .github_copilot_headers import (
     build_copilot_dynamic_headers,
     has_copilot_vision_input,
@@ -65,37 +68,16 @@ def _get_prompt_cache_retention(base_url: str | None, cache_retention: str) -> s
 # ============================================================================
 
 
-class OpenAIResponsesOptions:
-    """Options for OpenAI Responses API streaming."""
+@dataclass
+class OpenAIResponsesOptions(StreamOptions):
+    """Options for OpenAI Responses API streaming.
 
-    def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
-        signal: Any | None = None,
-        headers: dict[str, str] | None = None,
-        on_payload: Any | None = None,
-        metadata: dict[str, Any] | None = None,
-        cache_retention: str | None = None,
-        session_id: str | None = None,
-        reasoning_effort: str | None = None,
-        reasoning_summary: str | None = None,
-        service_tier: str | None = None,
-    ) -> None:
-        self.api_key = api_key
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.signal = signal
-        self.headers = headers
-        self.on_payload = on_payload
-        self.metadata = metadata
-        self.cache_retention = cache_retention
-        self.session_id = session_id
-        self.reasoning_effort = reasoning_effort
-        self.reasoning_summary = reasoning_summary
-        self.service_tier = service_tier
+    Upstream: ``interface OpenAIResponsesOptions extends StreamOptions``
+    """
+
+    reasoning_effort: str | None = None
+    reasoning_summary: str | None = None
+    service_tier: str | None = None
 
 
 # ============================================================================
