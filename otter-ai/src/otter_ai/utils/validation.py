@@ -11,8 +11,7 @@ from __future__ import annotations
 
 import json
 
-from pydantic import ValidationError
-
+from otter_ai.exceptions import ValidationError as OtterValidationError
 from otter_ai.types import Tool, ToolCall
 
 
@@ -38,7 +37,7 @@ def validate_tool_call(tools: list[Tool], tool_call: ToolCall) -> object:
     tool = next((t for t in tools if t.name == tool_call.name), None)
     if tool is None:
         msg = f'Tool "{tool_call.name}" not found'
-        raise RuntimeError(msg)
+        raise OtterValidationError(msg)
     return validate_tool_arguments(tool, tool_call)
 
 
@@ -70,14 +69,17 @@ def validate_tool_arguments(tool: Tool, tool_call: ToolCall) -> object:
         model_cls = tool.parameters
         result = model_cls.model_validate(tool_call.arguments)
         return result.model_dump()
-    except ValidationError as exc:
-        errors = (
-            "\n".join(
-                f"  - {err['loc'][-1] if err['loc'] else 'root'}: {err['msg']}"
-                for err in exc.errors()
+    except Exception as exc:
+        # Handle both pydantic ValidationError and other unexpected errors
+        errors = ""
+        if hasattr(exc, "errors"):
+            errors = (
+                "\n".join(
+                    f"  - {err['loc'][-1] if err['loc'] else 'root'}: {err['msg']}"
+                    for err in exc.errors()
+                )
+                or "Unknown validation error"
             )
-            or "Unknown validation error"
-        )
 
         received = json.dumps(tool_call.arguments, indent=2)
         msg = (
@@ -85,4 +87,4 @@ def validate_tool_arguments(tool: Tool, tool_call: ToolCall) -> object:
             f"{errors}\n\n"
             f"Received arguments:\n{received}"
         )
-        raise RuntimeError(msg) from exc
+        raise OtterValidationError(msg) from exc

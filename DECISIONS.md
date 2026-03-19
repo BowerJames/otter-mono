@@ -34,7 +34,7 @@ This document captures deliberate deviations from the upstream [pi-mono](https:/
 **Rationale:**
 - `asyncio` is the standard Python async framework, directly analogous to Node.js's event loop.
 - All provider HTTP calls use `httpx.AsyncClient`, which is fully `asyncio`-compatible.
-- The `EventStream` class uses `asyncio.Queue` internally for push/pull between producers and consumers.
+- The `EventStream` class uses a custom waiter-based pattern with `asyncio.Event` for push/pull between producers and consumers, mirroring the upstream's promise-based approach.
 
 **Impact:**
 - `AbortSignal` (Node.js) → `asyncio.CancelledError` / manual `asyncio.Event` cancellation token.
@@ -149,7 +149,7 @@ This document captures deliberate deviations from the upstream [pi-mono](https:/
 | `google-gemini-cli.ts` | `google_gemini_cli.py` |
 | `event-stream.ts` | `event_stream.py` |
 | `json-parse.ts` | `json_parse.py` |
-| `typebox-helpers.ts` | `typebox_helpers.py` |
+| `typebox-helpers.ts` | `schema_helpers.py` |
 
 ---
 
