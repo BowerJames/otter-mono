@@ -14,3 +14,7 @@ Python replication of [badlogic/pi-mono](https://github.com/badlogic/pi-mono), s
 - Follow the upstream pi-mono architecture and module boundaries when implementing otter equivalents. This work should be as close as possible to an exact replica written in python.
 - Type hints are required; use `pyright` for static checking.
 - When referencing upstream code, structure and naming should mirror pi-mono with the `pi` → `otter` substitution.
+
+## Task Management
+
+This repository manages its work using github issues and should be interacted with using the gh cli tool. Refer to the gh skill for more details and specifics for managing git issues.

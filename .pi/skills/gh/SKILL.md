@@ -1,6 +1,6 @@
 ---
 name: gh
-description: Use this skill when interacting with GitHub repositories, managing issues, or performing any GitHub CLI operations. Use when queries mention GitHub issues, pull requests, repositories, labels, or the gh CLI tool.
+description: Use this skill when interacting with  the GitHub repository, managing issues, or performing any GitHub CLI operations. Use when queries mention GitHub issues, pull requests, repositories, labels, or the gh CLI tool.
 ---
 
 # GitHub CLI (gh) Skill
@@ -34,3 +34,7 @@ When creating or editing an issue, include a section like:
 
 - `pi-ai/src/path/to/file.rs` → replicated as `otter-ai/src/path/to/file.py`
 ```
+
+### Commits and Closing Issues
+
+When work has been completed the issue should be mentioned in the commit and closed automatically.
