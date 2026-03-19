@@ -77,6 +77,29 @@ This document captures deliberate deviations from the upstream [pi-mono](https:/
 - Python doesn't distinguish type-only vs value exports.
 - Re-export from `__init__.py` using `from .module import X`.
 
+### 3d. Interface Inheritance
+
+**Upstream:** TypeScript `interface XOptions extends StreamOptions` for provider-specific option types that extend a base interface.
+
+**Decision:** `@dataclass` inheritance — `class XOptions(StreamOptions)`.
+
+**Rationale:**
+- `@dataclass` is the standard Python pattern for structured data classes with default values.
+- Inheritance from `@dataclass StreamOptions` provides the same polymorphic type relationship as TypeScript's `interface extends`.
+- Provider-specific fields are declared only on the subclass; base fields (`api_key`, `max_tokens`, `temperature`, `signal`, `headers`, `on_payload`, `metadata`, `cache_retention`, `session_id`, `transport`, `max_retry_delay_ms`) are inherited.
+- All provider option classes follow this pattern consistently:
+  - `AnthropicOptions(StreamOptions)`
+  - `GoogleOptions(StreamOptions)`
+  - `GoogleVertexOptions(StreamOptions)`
+  - `MistralOptions(StreamOptions)`
+  - `OpenAICompletionsOptions(StreamOptions)`
+  - `OpenAIResponsesOptions(StreamOptions)`
+  - `AzureOpenAIResponsesOptions(StreamOptions)`
+
+**Impact:**
+- Provider options are type-compatible with `StreamOptions` wherever the base type is expected.
+- New provider implementations must use `@dataclass` inheritance, not manual field duplication.
+
 ---
 
 ## 4. Module System

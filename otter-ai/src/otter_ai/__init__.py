@@ -112,6 +112,31 @@ from .models import (  # noqa: F401
     supports_xhigh,
 )
 
+# Provider options (upstream: export type { XOptions } from "./providers/*.js")
+from .providers.openai_completions import (  # noqa: F401
+    OpenAICompletionsOptions,
+)
+from .providers.openai_responses import (  # noqa: F401
+    OpenAIResponsesOptions,
+)
+from .providers.azure_openai_responses import (  # noqa: F401
+    AzureOpenAIResponsesOptions,
+)
+from .providers.anthropic import (  # noqa: F401
+    AnthropicOptions,
+)
+from .providers.google import (  # noqa: F401
+    GoogleOptions,
+)
+from .providers.google_vertex import (  # noqa: F401
+    GoogleVertexOptions,
+)
+from .providers.mistral import (  # noqa: F401
+    MistralOptions,
+)
+# NOTE: GoogleGeminiCliOptions, OpenAICodexResponsesOptions, and BedrockOptions
+# are not yet exported — blocked on their provider implementations (#13).
+
 # Provider utilities
 from .providers.simple_options import (  # noqa: F401
     adjust_max_tokens_for_thinking,
