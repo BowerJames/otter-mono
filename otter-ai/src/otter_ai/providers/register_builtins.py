@@ -231,11 +231,23 @@ stream_simple_openai_codex_responses = _create_lazy_stream(
     lambda: _load_provider_module("openai_codex_responses"), "stream_simple_openai_codex_responses",
 )
 
+def _load_bedrock_module() -> Any:
+    """Load the Bedrock provider module, checking for an override first.
+
+    Matches upstream ``loadBedrockProviderModule()`` which checks
+    ``bedrockProviderModuleOverride`` before falling through to dynamic
+    import.
+    """
+    if _bedrock_module_override is not None:
+        return _bedrock_module_override
+    return _load_provider_module("amazon_bedrock")
+
+
 stream_bedrock = _create_lazy_stream(
-    lambda: _load_provider_module("amazon_bedrock"), "stream_bedrock",
+    _load_bedrock_module, "stream_bedrock",
 )
 stream_simple_bedrock = _create_lazy_stream(
-    lambda: _load_provider_module("amazon_bedrock"), "stream_simple_bedrock",
+    _load_bedrock_module, "stream_simple_bedrock",
 )
 
 
