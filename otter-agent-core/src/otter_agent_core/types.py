@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from pydantic import BaseModel
 
+from otter_ai.types import SimpleStreamOptions
+
 if TYPE_CHECKING:
     from otter_ai.types import (
         AssistantMessage,
@@ -22,7 +24,6 @@ if TYPE_CHECKING:
         ImageContent,
         Message,
         Model,
-        SimpleStreamOptions,
         TextContent,
         ToolResultMessage,
     )
@@ -135,12 +136,24 @@ class AfterToolCallContext:
 # ============================================================================
 
 
-@dataclass
-class AgentLoopConfig:
+@dataclass(kw_only=True)
+class AgentLoopConfig(SimpleStreamOptions):
     """Configuration for a single run of the agent loop.
 
     Extends :class:`SimpleStreamOptions` from otter-ai with agent-specific
     settings for message conversion, tool execution, and lifecycle hooks.
+
+    Upstream reference: ``packages/agent/src/types.ts`` —
+    ``interface AgentLoopConfig extends SimpleStreamOptions``.
+
+    .. note::
+
+       Per DECISIONS.md §3d, provider-specific options use ``@dataclass``
+       inheritance.  ``AgentLoopConfig`` follows the same convention.
+
+       ``kw_only=True`` is used because the inherited ``SimpleStreamOptions``
+       fields all have defaults, while ``model`` and ``convert_to_llm`` are
+       required.  All call sites already use keyword arguments.
     """
 
     model: Model
@@ -273,24 +286,6 @@ class AgentLoopConfig:
 
     The second argument is an optional cancellation token.
     """
-
-    # ------------------------------------------------------------------
-    # Inherited from SimpleStreamOptions
-    # ------------------------------------------------------------------
-
-    temperature: float | None = None
-    max_tokens: int | None = None
-    reasoning: Literal["minimal", "low", "medium", "high", "xhigh"] | None = None
-    thinking_budgets: Any = None  # ThinkingBudgets | None — avoid circular import
-    signal: Any = None  # asyncio.Event | None
-    api_key: str | None = None
-    transport: Any = None  # Transport | None
-    cache_retention: Any = None  # CacheRetention | None
-    session_id: str | None = None
-    on_payload: Any = None  # OnPayloadCallback | None
-    headers: dict[str, str] | None = None
-    max_retry_delay_ms: int | None = None
-    metadata: dict[str, Any] | None = None
 
 
 # ============================================================================

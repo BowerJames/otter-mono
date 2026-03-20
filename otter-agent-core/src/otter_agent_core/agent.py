@@ -24,6 +24,7 @@ from otter_ai.types import (
     Message,
     Model,
     TextContent,
+    Transport,
     Usage,
     UsageCost,
 )
@@ -80,7 +81,7 @@ class AgentOptions:
     get_api_key: Any = None
     on_payload: Any = None
     thinking_budgets: ThinkingBudgets | None = None
-    transport: str | None = None
+    transport: Transport | None = None
     max_retry_delay_ms: int | None = None
     tool_execution: ToolExecutionMode | None = None
     before_tool_call: Any = None
@@ -146,7 +147,7 @@ class Agent:
         # LLM options
         self._on_payload: Any = opts.on_payload
         self._thinking_budgets: ThinkingBudgets | None = opts.thinking_budgets
-        self._transport: str = opts.transport or "sse"
+        self._transport: Transport = opts.transport or "sse"
         self._max_retry_delay_ms: int | None = opts.max_retry_delay_ms
 
         # Tool execution
@@ -192,11 +193,11 @@ class Agent:
         self._thinking_budgets = value
 
     @property
-    def transport(self) -> str:
+    def transport(self) -> Transport:
         """Current preferred transport."""
         return self._transport
 
-    def set_transport(self, value: str) -> None:
+    def set_transport(self, value: Transport) -> None:
         """Set the preferred transport."""
         self._transport = value
 
