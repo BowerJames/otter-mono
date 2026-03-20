@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Any, Literal, cast
 
@@ -132,7 +133,12 @@ def agent_loop(
 
     async def _run() -> None:
         messages = await run_agent_loop(
-            prompts, context, config, signal, stream_fn,
+            prompts,
+            context,
+            config,
+            _make_async_emit(stream.push),
+            signal,
+            stream_fn,
         )
         stream.end(messages)
 
@@ -166,7 +172,11 @@ def agent_loop_continue(
 
     async def _run() -> None:
         messages = await run_agent_loop_continue(
-            context, config, signal, stream_fn,
+            context,
+            config,
+            _make_async_emit(stream.push),
+            signal,
+            stream_fn,
         )
         stream.end(messages)
 
@@ -178,6 +188,7 @@ async def run_agent_loop(
     prompts: list[AgentMessage],
     context: AgentContext,
     config: AgentLoopConfig,
+    emit: AgentEventSink | None = None,
     signal: asyncio.Event | None = None,
     stream_fn: StreamFn | None = None,
 ) -> list[AgentMessage]:
@@ -185,27 +196,48 @@ async def run_agent_loop(
 
     This is the ``async`` counterpart of :func:`agent_loop` for callers
     that want to ``await`` the result directly.
+
+    Parameters
+    ----------
+    emit:
+        Callback invoked for every agent event.  When ``None`` a no-op
+        sink is used.  :func:`agent_loop` passes the ``EventStream.push``
+        method so that all events are delivered to stream consumers.
     """
+    _emit_fn = emit or _noop_emit
+
     new_messages: list[AgentMessage] = list(prompts)
     current_context = replace(context, messages=[*context.messages, *prompts])
 
-    await _emit(AgentEventStart(type="agent_start"))
-    await _emit(AgentEventTurnStart(type="turn_start"))
+    await _emit_fn(AgentEventStart(type="agent_start"))
+    await _emit_fn(AgentEventTurnStart(type="turn_start"))
     for prompt in prompts:
-        await _emit(AgentEventMessageStart(type="message_start", message=prompt))
-        await _emit(AgentEventMessageEnd(type="message_end", message=prompt))
+        await _emit_fn(AgentEventMessageStart(type="message_start", message=prompt))
+        await _emit_fn(AgentEventMessageEnd(type="message_end", message=prompt))
 
-    await _run_loop(current_context, new_messages, config, signal, _emit, stream_fn)
+    await _run_loop(current_context, new_messages, config, signal, _emit_fn, stream_fn)
     return new_messages
 
 
 async def run_agent_loop_continue(
     context: AgentContext,
     config: AgentLoopConfig,
+    emit: AgentEventSink | None = None,
     signal: asyncio.Event | None = None,
     stream_fn: StreamFn | None = None,
 ) -> list[AgentMessage]:
-    """Run the agent loop continuation and return new messages."""
+    """Run the agent loop continuation and return new messages.
+
+    Parameters
+    ----------
+    emit:
+        Callback invoked for every agent event.  When ``None`` a no-op
+        sink is used.  :func:`agent_loop_continue` passes the
+        ``EventStream.push`` method so that all events are delivered to
+        stream consumers.
+    """
+    _emit_fn = emit or _noop_emit
+
     if len(context.messages) == 0:
         msg = "Cannot continue: no messages in context"
         raise RuntimeError(msg)
@@ -218,10 +250,10 @@ async def run_agent_loop_continue(
     new_messages: list[AgentMessage] = []
     current_context = replace(context)
 
-    await _emit(AgentEventStart(type="agent_start"))
-    await _emit(AgentEventTurnStart(type="turn_start"))
+    await _emit_fn(AgentEventStart(type="agent_start"))
+    await _emit_fn(AgentEventTurnStart(type="turn_start"))
 
-    await _run_loop(current_context, new_messages, config, signal, _emit, stream_fn)
+    await _run_loop(current_context, new_messages, config, signal, _emit_fn, stream_fn)
     return new_messages
 
 
@@ -238,15 +270,25 @@ def _create_agent_stream() -> EventStream[AgentEvent, list[AgentMessage]]:
     )
 
 
-async def _emit(event: AgentEvent) -> None:
-    """No-op default emit.
-
-    The public ``agent_loop`` / ``agent_loop_continue`` functions use an
-    ``EventStream``-based sink.  This default allows the internal helpers
-    to accept an ``emit`` parameter without requiring one from callers of
-    ``run_agent_loop`` / ``run_agent_loop_continue``.
-    """
+async def _noop_emit(event: AgentEvent) -> None:
+    """No-op emit sink used when no callback is provided."""
     pass
+
+
+def _make_async_emit(
+    push: Callable[[AgentEvent], None],
+) -> AgentEventSink:
+    """Wrap a synchronous ``EventStream.push`` as an async ``AgentEventSink``.
+
+    ``EventStream.push`` is synchronous (it just enqueues the event), but the
+    agent loop expects an ``await``-able emit callback.  This wrapper adapts
+    between the two interfaces.
+    """
+
+    async def _async_push(event: AgentEvent) -> None:
+        push(event)
+
+    return _async_push
 
 
 async def _run_loop(
@@ -277,9 +319,12 @@ async def _run_loop(
             # Process pending messages (inject before next assistant response)
             if len(pending_messages) > 0:
                 for message in pending_messages:
-                    await emit(AgentEventMessageStart(
-                        type="message_start", message=message,
-                    ))
+                    await emit(
+                        AgentEventMessageStart(
+                            type="message_start",
+                            message=message,
+                        )
+                    )
                     await emit(AgentEventMessageEnd(type="message_end", message=message))
                     current_context.messages.append(message)
                     new_messages.append(message)
@@ -287,37 +332,51 @@ async def _run_loop(
 
             # Stream assistant response
             message = await _stream_assistant_response(
-                current_context, config, signal, emit, stream_fn,
+                current_context,
+                config,
+                signal,
+                emit,
+                stream_fn,
             )
             new_messages.append(message)
 
             if message.stop_reason in ("error", "aborted"):
-                await emit(AgentEventTurnEnd(
-                    type="turn_end", message=message, tool_results=[],
-                ))
+                await emit(
+                    AgentEventTurnEnd(
+                        type="turn_end",
+                        message=message,
+                        tool_results=[],
+                    )
+                )
                 await emit(AgentEventEnd(type="agent_end", messages=new_messages))
                 return
 
             # Check for tool calls
-            tool_calls = [
-                c for c in message.content if getattr(c, "type", None) == "toolCall"
-            ]
+            tool_calls = [c for c in message.content if getattr(c, "type", None) == "toolCall"]
             has_more_tool_calls = len(tool_calls) > 0
 
             tool_results: list[ToolResultMessage] = []
             if has_more_tool_calls:
                 tool_results.extend(
                     await _execute_tool_calls(
-                        current_context, message, config, signal, emit,
+                        current_context,
+                        message,
+                        config,
+                        signal,
+                        emit,
                     ),
                 )
                 for result in tool_results:
                     current_context.messages.append(result)
                     new_messages.append(result)
 
-            await emit(AgentEventTurnEnd(
-                type="turn_end", message=message, tool_results=tool_results,
-            ))
+            await emit(
+                AgentEventTurnEnd(
+                    type="turn_end",
+                    message=message,
+                    tool_results=tool_results,
+                )
+            )
 
             pending_messages = await _get_steering_messages(config)
 
@@ -411,24 +470,34 @@ async def _stream_assistant_response(
                 partial_message = event.partial
                 context.messages.append(partial_message)
                 added_partial = True
-                await emit(AgentEventMessageStart(
-                    type="message_start",
-                    message=replace(partial_message),
-                ))
+                await emit(
+                    AgentEventMessageStart(
+                        type="message_start",
+                        message=replace(partial_message),
+                    )
+                )
 
             case (
-                "text_start" | "text_delta" | "text_end"
-                | "thinking_start" | "thinking_delta" | "thinking_end"
-                | "toolcall_start" | "toolcall_delta" | "toolcall_end"
+                "text_start"
+                | "text_delta"
+                | "text_end"
+                | "thinking_start"
+                | "thinking_delta"
+                | "thinking_end"
+                | "toolcall_start"
+                | "toolcall_delta"
+                | "toolcall_end"
             ):
                 if partial_message is not None:
                     partial_message = event.partial
                     context.messages[-1] = partial_message
-                    await emit(AgentEventMessageUpdate(
-                        type="message_update",
-                        assistant_message_event=event,
-                        message=replace(partial_message),
-                    ))
+                    await emit(
+                        AgentEventMessageUpdate(
+                            type="message_update",
+                            assistant_message_event=event,
+                            message=replace(partial_message),
+                        )
+                    )
 
             case "done" | "error":
                 final_message = await response.result()
@@ -437,13 +506,18 @@ async def _stream_assistant_response(
                 else:
                     context.messages.append(final_message)
                 if not added_partial:
-                    await emit(AgentEventMessageStart(
-                        type="message_start",
-                        message=replace(final_message),
-                    ))
-                await emit(AgentEventMessageEnd(
-                    type="message_end", message=final_message,
-                ))
+                    await emit(
+                        AgentEventMessageStart(
+                            type="message_start",
+                            message=replace(final_message),
+                        )
+                    )
+                await emit(
+                    AgentEventMessageEnd(
+                        type="message_end",
+                        message=final_message,
+                    )
+                )
                 return final_message
 
     # Fallback: stream ended without terminal event (should not happen)
@@ -452,10 +526,12 @@ async def _stream_assistant_response(
         context.messages[-1] = final_message
     else:
         context.messages.append(final_message)
-        await emit(AgentEventMessageStart(
-            type="message_start",
-            message=replace(final_message),
-        ))
+        await emit(
+            AgentEventMessageStart(
+                type="message_start",
+                message=replace(final_message),
+            )
+        )
     await emit(AgentEventMessageEnd(type="message_end", message=final_message))
     return final_message
 
@@ -500,10 +576,20 @@ async def _execute_tool_calls(
     )
     if config.tool_execution == "sequential":
         return await _execute_tool_calls_sequential(
-            current_context, assistant_message, tool_calls, config, signal, emit,
+            current_context,
+            assistant_message,
+            tool_calls,
+            config,
+            signal,
+            emit,
         )
     return await _execute_tool_calls_parallel(
-        current_context, assistant_message, tool_calls, config, signal, emit,
+        current_context,
+        assistant_message,
+        tool_calls,
+        config,
+        signal,
+        emit,
     )
 
 
@@ -518,28 +604,48 @@ async def _execute_tool_calls_sequential(
     results: list[ToolResultMessage] = []
 
     for tool_call in tool_calls:
-        await emit(AgentEventToolExecutionStart(
-            type="tool_execution_start",
-            tool_call_id=tool_call.id,
-            tool_name=tool_call.name,
-            args=tool_call.arguments,
-        ))
+        await emit(
+            AgentEventToolExecutionStart(
+                type="tool_execution_start",
+                tool_call_id=tool_call.id,
+                tool_name=tool_call.name,
+                args=tool_call.arguments,
+            )
+        )
 
         preparation = await _prepare_tool_call(
-            current_context, assistant_message, tool_call, config, signal,
+            current_context,
+            assistant_message,
+            tool_call,
+            config,
+            signal,
         )
         if isinstance(preparation, _ImmediateToolCallOutcome):
-            results.append(await _emit_tool_call_outcome(
-                tool_call, preparation.result, preparation.is_error, emit,
-            ))
+            results.append(
+                await _emit_tool_call_outcome(
+                    tool_call,
+                    preparation.result,
+                    preparation.is_error,
+                    emit,
+                )
+            )
         else:
             executed = await _execute_prepared_tool_call(
-                preparation, signal, emit,
+                preparation,
+                signal,
+                emit,
             )
-            results.append(await _finalize_executed_tool_call(
-                current_context, assistant_message, preparation,
-                executed, config, signal, emit,
-            ))
+            results.append(
+                await _finalize_executed_tool_call(
+                    current_context,
+                    assistant_message,
+                    preparation,
+                    executed,
+                    config,
+                    signal,
+                    emit,
+                )
+            )
 
     return results
 
@@ -556,20 +662,31 @@ async def _execute_tool_calls_parallel(
     runnable_calls: list[_PreparedToolCall] = []
 
     for tool_call in tool_calls:
-        await emit(AgentEventToolExecutionStart(
-            type="tool_execution_start",
-            tool_call_id=tool_call.id,
-            tool_name=tool_call.name,
-            args=tool_call.arguments,
-        ))
+        await emit(
+            AgentEventToolExecutionStart(
+                type="tool_execution_start",
+                tool_call_id=tool_call.id,
+                tool_name=tool_call.name,
+                args=tool_call.arguments,
+            )
+        )
 
         preparation = await _prepare_tool_call(
-            current_context, assistant_message, tool_call, config, signal,
+            current_context,
+            assistant_message,
+            tool_call,
+            config,
+            signal,
         )
         if isinstance(preparation, _ImmediateToolCallOutcome):
-            results.append(await _emit_tool_call_outcome(
-                tool_call, preparation.result, preparation.is_error, emit,
-            ))
+            results.append(
+                await _emit_tool_call_outcome(
+                    tool_call,
+                    preparation.result,
+                    preparation.is_error,
+                    emit,
+                )
+            )
         else:
             runnable_calls.append(preparation)
 
@@ -583,10 +700,17 @@ async def _execute_tool_calls_parallel(
     tasks = [asyncio.create_task(_run_one(p)) for p in runnable_calls]
     for task in tasks:
         prepared, executed = await task
-        results.append(await _finalize_executed_tool_call(
-            current_context, assistant_message, prepared,
-            executed, config, signal, emit,
-        ))
+        results.append(
+            await _finalize_executed_tool_call(
+                current_context,
+                assistant_message,
+                prepared,
+                executed,
+                config,
+                signal,
+                emit,
+            )
+        )
 
     return results
 
@@ -615,7 +739,8 @@ async def _prepare_tool_call(
 
     try:
         validated_args = validate_tool_arguments(
-            cast("Tool", tool), tool_call,
+            cast("Tool", tool),
+            tool_call,
         )
 
         before_result = await _call_before_tool_call(
@@ -661,15 +786,19 @@ async def _execute_prepared_tool_call(
     update_events: list[asyncio.Task[None]] = []
 
     def _on_update(partial_result: AgentToolResult[Any]) -> None:
-        update_events.append(asyncio.create_task(emit(
-            AgentEventToolExecutionUpdate(
-                type="tool_execution_update",
-                tool_call_id=prepared.tool_call.id,
-                tool_name=prepared.tool_call.name,
-                args=prepared.tool_call.arguments,
-                partial_result=partial_result,
-            ),
-        )))
+        update_events.append(
+            asyncio.create_task(
+                emit(
+                    AgentEventToolExecutionUpdate(
+                        type="tool_execution_update",
+                        tool_call_id=prepared.tool_call.id,
+                        tool_name=prepared.tool_call.name,
+                        args=prepared.tool_call.arguments,
+                        partial_result=partial_result,
+                    ),
+                )
+            )
+        )
 
     try:
         execute_result = prepared.tool.execute(
@@ -716,16 +845,8 @@ async def _finalize_executed_tool_call(
     )
 
     if after_result is not None:
-        new_content = (
-            after_result.content
-            if after_result.content is not None
-            else result.content
-        )
-        new_details = (
-            after_result.details
-            if after_result.details is not None
-            else result.details
-        )
+        new_content = after_result.content if after_result.content is not None else result.content
+        new_details = after_result.details if after_result.details is not None else result.details
         result = AgentToolResult(content=new_content, details=new_details)
         if after_result.is_error is not None:
             is_error = after_result.is_error
@@ -748,13 +869,15 @@ async def _emit_tool_call_outcome(
     emit: AgentEventSink,
 ) -> ToolResultMessage:
     """Emit tool_execution_end, message_start, message_end and return the result."""
-    await emit(AgentEventToolExecutionEnd(
-        type="tool_execution_end",
-        tool_call_id=tool_call.id,
-        tool_name=tool_call.name,
-        result=result,
-        is_error=is_error,
-    ))
+    await emit(
+        AgentEventToolExecutionEnd(
+            type="tool_execution_end",
+            tool_call_id=tool_call.id,
+            tool_name=tool_call.name,
+            result=result,
+            is_error=is_error,
+        )
+    )
 
     tool_result_message = ToolResultMessage(
         role="toolResult",
@@ -766,8 +889,11 @@ async def _emit_tool_call_outcome(
         timestamp=int(time.time() * 1000),
     )
 
-    await emit(AgentEventMessageStart(
-        type="message_start", message=tool_result_message,
-    ))
+    await emit(
+        AgentEventMessageStart(
+            type="message_start",
+            message=tool_result_message,
+        )
+    )
     await emit(AgentEventMessageEnd(type="message_end", message=tool_result_message))
     return tool_result_message
