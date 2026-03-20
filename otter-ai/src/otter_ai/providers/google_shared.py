@@ -17,6 +17,7 @@ from otter_ai.types import (
     Tool,
 )
 from otter_ai.utils.sanitize_unicode import sanitize_surrogates
+
 from .transform_messages import transform_messages
 
 GoogleApiType = Literal["google-generative-ai", "google-gemini-cli", "google-vertex"]
@@ -127,22 +128,26 @@ def convert_messages(
     for msg in transformed_messages:
         if msg.role == "user":
             if isinstance(msg.content, str):
-                contents.append({
-                    "role": "user",
-                    "parts": [{"text": sanitize_surrogates(msg.content)}],
-                })
+                contents.append(
+                    {
+                        "role": "user",
+                        "parts": [{"text": sanitize_surrogates(msg.content)}],
+                    }
+                )
             else:
                 parts: list[dict[str, Any]] = []
                 for item in msg.content:
                     if item.type == "text":
                         parts.append({"text": sanitize_surrogates(item.text)})
                     else:
-                        parts.append({
-                            "inlineData": {
-                                "mimeType": item.mime_type,
-                                "data": item.data,
-                            },
-                        })
+                        parts.append(
+                            {
+                                "inlineData": {
+                                    "mimeType": item.mime_type,
+                                    "data": item.data,
+                                },
+                            }
+                        )
                 # Filter images if model doesn't support them
                 if "image" not in (model.input or []):
                     parts = [p for p in parts if "text" in p]
@@ -194,9 +199,7 @@ def convert_messages(
                         getattr(block, "thought_signature", None),
                     )
                     is_gemini3 = "gemini-3" in model.id.lower()
-                    effective_sig = (
-                        thought_sig or (SKIP_THOUGHT_SIGNATURE if is_gemini3 else None)
-                    )
+                    effective_sig = thought_sig or (SKIP_THOUGHT_SIGNATURE if is_gemini3 else None)
                     fc: dict[str, Any] = {
                         "name": block.name,
                         "args": block.arguments or {},
@@ -240,9 +243,7 @@ def convert_messages(
             fr: dict[str, Any] = {
                 "name": msg.tool_name,
                 "response": (
-                    {"error": response_value}
-                    if msg.is_error
-                    else {"output": response_value}
+                    {"error": response_value} if msg.is_error else {"output": response_value}
                 ),
             }
             if has_images and model_supports_multimodal:
@@ -263,17 +264,21 @@ def convert_messages(
             ):
                 last_content["parts"].append(function_response_part)
             else:
-                contents.append({
-                    "role": "user",
-                    "parts": [function_response_part],
-                })
+                contents.append(
+                    {
+                        "role": "user",
+                        "parts": [function_response_part],
+                    }
+                )
 
             # For Gemini < 3, add images in separate user message
             if has_images and not model_supports_multimodal:
-                contents.append({
-                    "role": "user",
-                    "parts": [{"text": "Tool result image:"}, *image_parts],
-                })
+                contents.append(
+                    {
+                        "role": "user",
+                        "parts": [{"text": "Tool result image:"}, *image_parts],
+                    }
+                )
 
     return contents
 

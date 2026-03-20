@@ -82,7 +82,10 @@ def transform_messages(
             # Message is AssistantMessage after narrowing
             transformed.append(
                 _transform_assistant_message(
-                    msg, model, tool_call_id_map, normalize_tool_call_id,
+                    msg,
+                    model,
+                    tool_call_id_map,
+                    normalize_tool_call_id,
                 ),
             )
 
@@ -135,11 +138,7 @@ def transform_messages(
 
 
 def _is_same_model(msg: AssistantMessage, model: Model) -> bool:
-    return (
-        msg.provider == model.provider
-        and msg.api == model.api
-        and msg.model == model.id
-    )
+    return msg.provider == model.provider and msg.api == model.api and msg.model == model.id
 
 
 def _transform_assistant_message(
@@ -159,7 +158,12 @@ def _transform_assistant_message(
         else:
             # Content is ToolCall after narrowing
             new_tc = _transform_tool_call(
-                block, same_model, model, msg, tool_call_id_map, normalize_tool_call_id,
+                block,
+                same_model,
+                model,
+                msg,
+                tool_call_id_map,
+                normalize_tool_call_id,
             )
             new_content.append(new_tc)
 

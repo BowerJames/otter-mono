@@ -272,9 +272,7 @@ def stream_google(
 
         try:
             api_key = (
-                (options.api_key if options else None)
-                or get_env_api_key(model.provider)
-                or ""
+                (options.api_key if options else None) or get_env_api_key(model.provider) or ""
             )
             client = _create_client(model, api_key, options.headers if options else None)
             params = _build_params(model, context, options)
@@ -315,17 +313,21 @@ def stream_google(
                                 # Finish previous block
                                 if current_block:
                                     if current_block.type == "text":
-                                        stream.push(AssistantMessageEventTextEnd(
-                                            content_index=len(blocks) - 1,
-                                            content=current_block.text,
-                                            partial=output,
-                                        ))
+                                        stream.push(
+                                            AssistantMessageEventTextEnd(
+                                                content_index=len(blocks) - 1,
+                                                content=current_block.text,
+                                                partial=output,
+                                            )
+                                        )
                                     else:
-                                        stream.push(AssistantMessageEventThinkingEnd(
-                                            content_index=block_index(),
-                                            content=current_block.thinking,
-                                            partial=output,
-                                        ))
+                                        stream.push(
+                                            AssistantMessageEventThinkingEnd(
+                                                content_index=block_index(),
+                                                content=current_block.thinking,
+                                                partial=output,
+                                            )
+                                        )
 
                                 if is_thinking:
                                     current_block = ThinkingContent(
@@ -334,17 +336,21 @@ def stream_google(
                                         thinking_signature=None,
                                     )
                                     output.content.append(current_block)
-                                    stream.push(AssistantMessageEventThinkingStart(
-                                        content_index=block_index(),
-                                        partial=output,
-                                    ))
+                                    stream.push(
+                                        AssistantMessageEventThinkingStart(
+                                            content_index=block_index(),
+                                            partial=output,
+                                        )
+                                    )
                                 else:
                                     current_block = TextContent(type="text", text="")
                                     output.content.append(current_block)
-                                    stream.push(AssistantMessageEventTextStart(
-                                        content_index=block_index(),
-                                        partial=output,
-                                    ))
+                                    stream.push(
+                                        AssistantMessageEventTextStart(
+                                            content_index=block_index(),
+                                            partial=output,
+                                        )
+                                    )
 
                             if current_block.type == "thinking":
                                 current_block.thinking += part.text
@@ -352,11 +358,13 @@ def stream_google(
                                     current_block.thinking_signature,
                                     getattr(part, "thought_signature", None),
                                 )
-                                stream.push(AssistantMessageEventThinkingDelta(
-                                    content_index=block_index(),
-                                    delta=part.text,
-                                    partial=output,
-                                ))
+                                stream.push(
+                                    AssistantMessageEventThinkingDelta(
+                                        content_index=block_index(),
+                                        delta=part.text,
+                                        partial=output,
+                                    )
+                                )
                             else:
                                 current_block.text += part.text
                                 sig = retain_thought_signature(
@@ -365,41 +373,44 @@ def stream_google(
                                 )
                                 if sig:
                                     current_block.text_signature = sig  # type: ignore[attr-defined]
-                                stream.push(AssistantMessageEventTextDelta(
-                                    content_index=block_index(),
-                                    delta=part.text,
-                                    partial=output,
-                                ))
+                                stream.push(
+                                    AssistantMessageEventTextDelta(
+                                        content_index=block_index(),
+                                        delta=part.text,
+                                        partial=output,
+                                    )
+                                )
 
                         # --- Function calls ---
                         if hasattr(part, "function_call") and part.function_call:
                             # Finish previous block
                             if current_block:
                                 if current_block.type == "text":
-                                    stream.push(AssistantMessageEventTextEnd(
-                                        content_index=block_index(),
-                                        content=current_block.text,
-                                        partial=output,
-                                    ))
+                                    stream.push(
+                                        AssistantMessageEventTextEnd(
+                                            content_index=block_index(),
+                                            content=current_block.text,
+                                            partial=output,
+                                        )
+                                    )
                                 else:
-                                    stream.push(AssistantMessageEventThinkingEnd(
-                                        content_index=block_index(),
-                                        content=current_block.thinking,
-                                        partial=output,
-                                    ))
+                                    stream.push(
+                                        AssistantMessageEventThinkingEnd(
+                                            content_index=block_index(),
+                                            content=current_block.thinking,
+                                            partial=output,
+                                        )
+                                    )
                                 current_block = None
 
                             fc = part.function_call
                             provided_id = getattr(fc, "id", None)
-                            needs_new_id = (
-                                not provided_id
-                                or any(
-                                    b.type == "toolCall" and b.id == provided_id
-                                    for b in output.content
-                                )
+                            needs_new_id = not provided_id or any(
+                                b.type == "toolCall" and b.id == provided_id for b in output.content
                             )
                             tool_call_id = (
-                                f"{fc.name}_{int(time.time() * 1000)}_{_tool_call_counter := _tool_call_counter + 1}"
+                                f"{fc.name}_{int(time.time() * 1000)}"
+                                f"_{_tool_call_counter:= _tool_call_counter + 1}"
                                 if needs_new_id
                                 else provided_id
                             )
@@ -415,20 +426,26 @@ def stream_google(
                                 tool_call.thought_signature = thought_sig  # type: ignore[attr-defined]
 
                             output.content.append(tool_call)
-                            stream.push(AssistantMessageEventToolcallStart(
-                                content_index=block_index(),
-                                partial=output,
-                            ))
-                            stream.push(AssistantMessageEventToolcallDelta(
-                                content_index=block_index(),
-                                delta=json.dumps(tool_call.arguments),
-                                partial=output,
-                            ))
-                            stream.push(AssistantMessageEventToolcallEnd(
-                                content_index=block_index(),
-                                tool_call=tool_call,
-                                partial=output,
-                            ))
+                            stream.push(
+                                AssistantMessageEventToolcallStart(
+                                    content_index=block_index(),
+                                    partial=output,
+                                )
+                            )
+                            stream.push(
+                                AssistantMessageEventToolcallDelta(
+                                    content_index=block_index(),
+                                    delta=json.dumps(tool_call.arguments),
+                                    partial=output,
+                                )
+                            )
+                            stream.push(
+                                AssistantMessageEventToolcallEnd(
+                                    content_index=block_index(),
+                                    tool_call=tool_call,
+                                    partial=output,
+                                )
+                            )
 
                 # Stop reason
                 if candidate and hasattr(candidate, "finish_reason") and candidate.finish_reason:
@@ -442,29 +459,31 @@ def stream_google(
                     output.usage = Usage(
                         input=getattr(um, "prompt_token_count", 0) or 0,
                         output=(getattr(um, "candidates_token_count", 0) or 0)
-                             + (getattr(um, "thoughts_token_count", 0) or 0),
+                        + (getattr(um, "thoughts_token_count", 0) or 0),
                         cache_read=getattr(um, "cached_content_token_count", 0) or 0,
                         cache_write=0,
                     )
-                    output.usage.total_tokens = (
-                        getattr(um, "total_token_count", 0) or 0
-                    )
+                    output.usage.total_tokens = getattr(um, "total_token_count", 0) or 0
                     calculate_cost(model, output.usage)
 
             # Finish current block
             if current_block:
                 if current_block.type == "text":
-                    stream.push(AssistantMessageEventTextEnd(
-                        content_index=block_index(),
-                        content=current_block.text,
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventTextEnd(
+                            content_index=block_index(),
+                            content=current_block.text,
+                            partial=output,
+                        )
+                    )
                 else:
-                    stream.push(AssistantMessageEventThinkingEnd(
-                        content_index=block_index(),
-                        content=current_block.thinking,
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventThinkingEnd(
+                            content_index=block_index(),
+                            content=current_block.thinking,
+                            partial=output,
+                        )
+                    )
 
             # Check abort
             if options and options.signal and options.signal.is_set():
@@ -478,15 +497,14 @@ def stream_google(
 
         except Exception as error:
             output.stop_reason = (
-                "aborted"
-                if (options and options.signal and options.signal.is_set())
-                else "error"
+                "aborted" if (options and options.signal and options.signal.is_set()) else "error"
             )
-            output.error_message = error.message if isinstance(error, Exception) else json.dumps(error)  # type: ignore[union-attr]
+            output.error_message = error.args[0] if error.args else str(error)
             stream.push(AssistantMessageEventError(reason=output.stop_reason, error=output))
             stream.end()
 
     import asyncio
+
     asyncio.create_task(_run())
     return stream
 
@@ -507,22 +525,45 @@ def stream_simple_google(
     base = build_base_options(model, options, api_key)
 
     if not (options and options.reasoning):
-        return stream_google(model, context, GoogleOptions(
-            api_key=base.api_key,
-            max_tokens=base.max_tokens,
-            temperature=base.temperature,
-            signal=base.signal,
-            headers=base.headers,
-            on_payload=base.on_payload,
-            metadata=base.metadata,
-            thinking={"enabled": False},
-        ))
+        return stream_google(
+            model,
+            context,
+            GoogleOptions(
+                api_key=base.api_key,
+                max_tokens=base.max_tokens,
+                temperature=base.temperature,
+                signal=base.signal,
+                headers=base.headers,
+                on_payload=base.on_payload,
+                metadata=base.metadata,
+                thinking={"enabled": False},
+            ),
+        )
 
     effort = clamp_reasoning(options.reasoning) or "high"
 
     if _is_gemini_3_pro_model(model) or _is_gemini_3_flash_model(model):
         level = _get_gemini_3_thinking_level(effort, model)
-        return stream_google(model, context, GoogleOptions(
+        return stream_google(
+            model,
+            context,
+            GoogleOptions(
+                api_key=base.api_key,
+                max_tokens=base.max_tokens,
+                temperature=base.temperature,
+                signal=base.signal,
+                headers=base.headers,
+                on_payload=base.on_payload,
+                metadata=base.metadata,
+                thinking={"enabled": True, "level": level},
+            ),
+        )
+
+    budget = _get_google_budget(model, effort, options.thinking_budgets)
+    return stream_google(
+        model,
+        context,
+        GoogleOptions(
             api_key=base.api_key,
             max_tokens=base.max_tokens,
             temperature=base.temperature,
@@ -530,17 +571,6 @@ def stream_simple_google(
             headers=base.headers,
             on_payload=base.on_payload,
             metadata=base.metadata,
-            thinking={"enabled": True, "level": level},
-        ))
-
-    budget = _get_google_budget(model, effort, options.thinking_budgets)
-    return stream_google(model, context, GoogleOptions(
-        api_key=base.api_key,
-        max_tokens=base.max_tokens,
-        temperature=base.temperature,
-        signal=base.signal,
-        headers=base.headers,
-        on_payload=base.on_payload,
-        metadata=base.metadata,
-        thinking={"enabled": True, "budget_tokens": budget},
-    ))
+            thinking={"enabled": True, "budget_tokens": budget},
+        ),
+    )

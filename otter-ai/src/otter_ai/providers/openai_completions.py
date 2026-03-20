@@ -55,7 +55,6 @@ from .github_copilot_headers import build_copilot_dynamic_headers, has_copilot_v
 from .simple_options import build_base_options, clamp_reasoning
 from .transform_messages import transform_messages
 
-
 # ============================================================================
 # Provider-specific options
 # ============================================================================
@@ -103,9 +102,8 @@ def _has_tool_history(messages: list[Message]) -> bool:
     for msg in messages:
         if msg.role == "toolResult":
             return True
-        if msg.role == "assistant":
-            if any(block.type == "toolCall" for block in msg.content):
-                return True
+        if msg.role == "assistant" and any(block.type == "toolCall" for block in msg.content):
+            return True
     return False
 
 
@@ -162,7 +160,13 @@ def _detect_compat(model: Model) -> _ResolvedCompat:
     is_groq = provider == "groq" or "groq.com" in base_url
 
     reasoning_effort_map: dict[str, str] = (
-        {"minimal": "default", "low": "default", "medium": "default", "high": "default", "xhigh": "default"}
+        {
+            "minimal": "default",
+            "low": "default",
+            "medium": "default",
+            "high": "default",
+            "xhigh": "default",
+        }
         if is_groq and model.id == "qwen/qwen3-32b"
         else {}
     )
@@ -200,22 +204,36 @@ def _get_compat(model: Model) -> _ResolvedCompat:
         return detected
 
     return _ResolvedCompat(
-        supports_store=compat.supports_store if compat.supports_store is not None else detected.supports_store,
+        supports_store=compat.supports_store
+        if compat.supports_store is not None
+        else detected.supports_store,
         supports_developer_role=(
-            compat.supports_developer_role if compat.supports_developer_role is not None else detected.supports_developer_role
+            compat.supports_developer_role
+            if compat.supports_developer_role is not None
+            else detected.supports_developer_role
         ),
         supports_reasoning_effort=(
-            compat.supports_reasoning_effort if compat.supports_reasoning_effort is not None else detected.supports_reasoning_effort
+            compat.supports_reasoning_effort
+            if compat.supports_reasoning_effort is not None
+            else detected.supports_reasoning_effort
         ),
         reasoning_effort_map=(  # type: ignore[arg-type]
-            compat.reasoning_effort_map if compat.reasoning_effort_map is not None else detected.reasoning_effort_map
+            compat.reasoning_effort_map
+            if compat.reasoning_effort_map is not None
+            else detected.reasoning_effort_map
         ),
         supports_usage_in_streaming=(
-            compat.supports_usage_in_streaming if compat.supports_usage_in_streaming is not None else detected.supports_usage_in_streaming
+            compat.supports_usage_in_streaming
+            if compat.supports_usage_in_streaming is not None
+            else detected.supports_usage_in_streaming
         ),
-        max_tokens_field=compat.max_tokens_field if compat.max_tokens_field is not None else detected.max_tokens_field,
+        max_tokens_field=compat.max_tokens_field
+        if compat.max_tokens_field is not None
+        else detected.max_tokens_field,
         requires_tool_result_name=(
-            compat.requires_tool_result_name if compat.requires_tool_result_name is not None else detected.requires_tool_result_name
+            compat.requires_tool_result_name
+            if compat.requires_tool_result_name is not None
+            else detected.requires_tool_result_name
         ),
         requires_assistant_after_tool_result=(
             compat.requires_assistant_after_tool_result
@@ -223,15 +241,23 @@ def _get_compat(model: Model) -> _ResolvedCompat:
             else detected.requires_assistant_after_tool_result
         ),
         requires_thinking_as_text=(
-            compat.requires_thinking_as_text if compat.requires_thinking_as_text is not None else detected.requires_thinking_as_text
+            compat.requires_thinking_as_text
+            if compat.requires_thinking_as_text is not None
+            else detected.requires_thinking_as_text
         ),
-        thinking_format=compat.thinking_format if compat.thinking_format is not None else detected.thinking_format,
+        thinking_format=compat.thinking_format
+        if compat.thinking_format is not None
+        else detected.thinking_format,
         open_router_routing=compat.open_router_routing,
         vercel_gateway_routing=(
-            compat.vercel_gateway_routing if compat.vercel_gateway_routing is not None else detected.vercel_gateway_routing
+            compat.vercel_gateway_routing
+            if compat.vercel_gateway_routing is not None
+            else detected.vercel_gateway_routing
         ),
         supports_strict_mode=(
-            compat.supports_strict_mode if compat.supports_strict_mode is not None else detected.supports_strict_mode
+            compat.supports_strict_mode
+            if compat.supports_strict_mode is not None
+            else detected.supports_strict_mode
         ),
     )
 
@@ -363,15 +389,15 @@ def _maybe_add_openrouter_anthropic_cache_control(
                 return
 
 
-def _normalize_tool_call_id(id: str, provider: str) -> str:
+def _normalize_tool_call_id(tool_call_id: str, provider: str) -> str:
     """Normalize tool call IDs for cross-provider compatibility."""
-    if "|" in id:
-        call_id = id.split("|")[0]
+    if "|" in tool_call_id:
+        call_id = tool_call_id.split("|")[0]
         return call_id.replace("[^a-zA-Z0-9_-]", "_")[:40]  # noqa: S603
 
     if provider == "openai":
-        return id[:40] if len(id) > 40 else id
-    return id
+        return tool_call_id[:40] if len(tool_call_id) > 40 else tool_call_id
+    return tool_call_id
 
 
 def convert_messages(
@@ -388,7 +414,7 @@ def convert_messages(
     transformed_messages = transform_messages(
         context.messages,
         model,
-        lambda id, _model, _msg: _normalize_tool_call_id(id, model.provider),
+        lambda tc_id, _model, _msg: _normalize_tool_call_id(tc_id, model.provider),
     )
 
     # System prompt
@@ -404,33 +430,45 @@ def convert_messages(
         msg = transformed_messages[i]
 
         # Some providers need an assistant bridge between tool results and user messages
-        if compat.requires_assistant_after_tool_result and last_role == "toolResult" and msg.role == "user":
-            params.append({
-                "role": "assistant",
-                "content": "I have processed the tool results.",
-            })
+        if (
+            compat.requires_assistant_after_tool_result
+            and last_role == "toolResult"
+            and msg.role == "user"
+        ):
+            params.append(
+                {
+                    "role": "assistant",
+                    "content": "I have processed the tool results.",
+                }
+            )
 
         if msg.role == "user":
             if isinstance(msg.content, str):
-                params.append({
-                    "role": "user",
-                    "content": sanitize_surrogates(msg.content),
-                })
+                params.append(
+                    {
+                        "role": "user",
+                        "content": sanitize_surrogates(msg.content),
+                    }
+                )
             else:
                 user_content: list[dict[str, Any]] = []
                 for item in msg.content:
                     if item.type == "text":
-                        user_content.append({
-                            "type": "text",
-                            "text": sanitize_surrogates(item.text),
-                        })
+                        user_content.append(
+                            {
+                                "type": "text",
+                                "text": sanitize_surrogates(item.text),
+                            }
+                        )
                     elif item.type == "image":
-                        user_content.append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{item.mime_type};base64,{item.data}",
-                            },
-                        })
+                        user_content.append(
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{item.mime_type};base64,{item.data}",
+                                },
+                            }
+                        )
 
                 if "image" not in model.input:
                     user_content = [c for c in user_content if c.get("type") != "image_url"]
@@ -448,7 +486,9 @@ def convert_messages(
             text_blocks = [b for b in msg.content if b.type == "text"]
             non_empty_text = [b for b in text_blocks if b.text and b.text.strip()]
             if non_empty_text:
-                assistant_msg["content"] = "".join(sanitize_surrogates(b.text) for b in non_empty_text)
+                assistant_msg["content"] = "".join(
+                    sanitize_surrogates(b.text) for b in non_empty_text
+                )
 
             # Thinking blocks
             thinking_blocks = [b for b in msg.content if b.type == "thinking"]
@@ -513,14 +553,14 @@ def convert_messages(
             while j < len(transformed_messages) and transformed_messages[j].role == "toolResult":
                 tool_msg = transformed_messages[j]
 
-                text_result = "".join(
-                    c.text for c in tool_msg.content if c.type == "text"
-                )
+                text_result = "".join(c.text for c in tool_msg.content if c.type == "text")
                 has_images = any(c.type == "image" for c in tool_msg.content)
 
                 tool_result_msg: dict[str, Any] = {
                     "role": "tool",
-                    "content": sanitize_surrogates(text_result if text_result else "(see attached image)"),
+                    "content": sanitize_surrogates(
+                        text_result if text_result else "(see attached image)"
+                    ),
                     "tool_call_id": tool_msg.tool_call_id,
                 }
                 if compat.requires_tool_result_name and tool_msg.tool_name:
@@ -530,12 +570,14 @@ def convert_messages(
                 if has_images and "image" in model.input:
                     for block in tool_msg.content:
                         if block.type == "image":
-                            image_blocks.append({
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:{block.mime_type};base64,{block.data}",
-                                },
-                            })
+                            image_blocks.append(
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:{block.mime_type};base64,{block.data}",
+                                    },
+                                }
+                            )
 
                 j += 1
 
@@ -543,17 +585,21 @@ def convert_messages(
 
             if image_blocks:
                 if compat.requires_assistant_after_tool_result:
-                    params.append({
-                        "role": "assistant",
-                        "content": "I have processed the tool results.",
-                    })
-                params.append({
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Attached image(s) from tool result:"},
-                        *image_blocks,
-                    ],
-                })
+                    params.append(
+                        {
+                            "role": "assistant",
+                            "content": "I have processed the tool results.",
+                        }
+                    )
+                params.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Attached image(s) from tool result:"},
+                            *image_blocks,
+                        ],
+                    }
+                )
                 last_role = "user"
             else:
                 last_role = "toolResult"
@@ -637,19 +683,20 @@ def _build_params(
 
     # Thinking / reasoning effort
     if options and options.reasoning_effort and model.reasoning:
-        if compat.thinking_format == "zai":
-            params["enable_thinking"] = True
-        elif compat.thinking_format == "qwen":
+        if compat.thinking_format == "zai" or compat.thinking_format == "qwen":
             params["enable_thinking"] = True
         elif compat.thinking_format == "qwen-chat-template":
             params["chat_template_kwargs"] = {"enable_thinking": True}
         elif compat.thinking_format == "openrouter":
             params["reasoning"] = {
-                "effort": _map_reasoning_effort(options.reasoning_effort, compat.reasoning_effort_map),
+                "effort": _map_reasoning_effort(
+                    options.reasoning_effort, compat.reasoning_effort_map
+                ),
             }
         elif compat.supports_reasoning_effort:
             params["reasoning_effort"] = _map_reasoning_effort(
-                options.reasoning_effort, compat.reasoning_effort_map,
+                options.reasoning_effort,
+                compat.reasoning_effort_map,
             )
 
     # OpenRouter provider routing
@@ -698,7 +745,9 @@ def stream_openai_completions(
 
     async def _run() -> None:
         try:
-            api_key = (options.api_key if options else None) or get_env_api_key(model.provider) or ""
+            api_key = (
+                (options.api_key if options else None) or get_env_api_key(model.provider) or ""
+            )
             client = _create_client(model, context, api_key, options.headers if options else None)
             compat = _get_compat(model)
             params = _build_params(model, context, options, compat)
@@ -726,17 +775,21 @@ def stream_openai_completions(
 
                 idx = _block_index()
                 if current_block["type"] == "text":
-                    stream.push(AssistantMessageEventTextEnd(
-                        content_index=idx,
-                        content=current_block["text"],
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventTextEnd(
+                            content_index=idx,
+                            content=current_block["text"],
+                            partial=output,
+                        )
+                    )
                 elif current_block["type"] == "thinking":
-                    stream.push(AssistantMessageEventThinkingEnd(
-                        content_index=idx,
-                        content=current_block["thinking"],
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventThinkingEnd(
+                            content_index=idx,
+                            content=current_block["thinking"],
+                            partial=output,
+                        )
+                    )
                 elif current_block["type"] == "toolCall":
                     final_tc = ToolCall(
                         type="toolCall",
@@ -745,17 +798,18 @@ def stream_openai_completions(
                         arguments=parse_streaming_json(partial_args) or {},
                     )
                     output.content[idx] = final_tc
-                    stream.push(AssistantMessageEventToolcallEnd(
-                        content_index=idx,
-                        tool_call=final_tc,
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventToolcallEnd(
+                            content_index=idx,
+                            tool_call=final_tc,
+                            partial=output,
+                        )
+                    )
 
                 current_block = None
                 partial_args = ""
 
             async for chunk in openai_response:
-
                 # Check abort signal between chunks
                 if options and options.signal and options.signal.is_set():
                     raise RuntimeError("Request was aborted")
@@ -766,7 +820,11 @@ def stream_openai_completions(
 
                 # Parse usage
                 if hasattr(chunk, "usage") and chunk.usage:
-                    usage_data = chunk.usage.model_dump() if hasattr(chunk.usage, "model_dump") else dict(chunk.usage)
+                    usage_data = (
+                        chunk.usage.model_dump()
+                        if hasattr(chunk.usage, "model_dump")
+                        else dict(chunk.usage)
+                    )
                     output.usage = _parse_chunk_usage(usage_data, model)
 
                 chunk_data = chunk.model_dump() if hasattr(chunk, "model_dump") else dict(chunk)
@@ -777,9 +835,8 @@ def stream_openai_completions(
                 choice = choices[0]
 
                 # Fallback: some providers return usage in choice.usage
-                if not (hasattr(chunk, "usage") and chunk.usage):
-                    if "usage" in choice:
-                        output.usage = _parse_chunk_usage(choice["usage"], model)
+                if not (hasattr(chunk, "usage") and chunk.usage) and "usage" in choice:
+                    output.usage = _parse_chunk_usage(choice["usage"], model)
 
                 # Finish reason
                 finish_reason = choice.get("finish_reason")
@@ -800,21 +857,26 @@ def stream_openai_completions(
                         _finish_current_block()
                         current_block = {"type": "text", "text": ""}
                         output.content.append(TextContent(type="text", text=""))
-                        stream.push(AssistantMessageEventTextStart(
-                            content_index=_block_index(),
-                            partial=output,
-                        ))
+                        stream.push(
+                            AssistantMessageEventTextStart(
+                                content_index=_block_index(),
+                                partial=output,
+                            )
+                        )
 
                     if current_block["type"] == "text":
                         current_block["text"] += content
                         output.content[_block_index()] = TextContent(
-                            type="text", text=current_block["text"],
+                            type="text",
+                            text=current_block["text"],
                         )
-                        stream.push(AssistantMessageEventTextDelta(
-                            content_index=_block_index(),
-                            delta=content,
-                            partial=output,
-                        ))
+                        stream.push(
+                            AssistantMessageEventTextDelta(
+                                content_index=_block_index(),
+                                delta=content,
+                                partial=output,
+                            )
+                        )
 
                 # --- Reasoning content (llama.cpp, other compatible endpoints) ---
                 reasoning_fields = ["reasoning_content", "reasoning", "reasoning_text"]
@@ -834,10 +896,12 @@ def stream_openai_completions(
                             "thinking_signature": found_reasoning_field,
                         }
                         output.content.append(ThinkingContent(type="thinking", thinking=""))
-                        stream.push(AssistantMessageEventThinkingStart(
-                            content_index=_block_index(),
-                            partial=output,
-                        ))
+                        stream.push(
+                            AssistantMessageEventThinkingStart(
+                                content_index=_block_index(),
+                                partial=output,
+                            )
+                        )
 
                     if current_block["type"] == "thinking":
                         reasoning_delta = str(delta[found_reasoning_field])
@@ -847,11 +911,13 @@ def stream_openai_completions(
                             thinking=current_block["thinking"],
                             thinking_signature=current_block.get("thinking_signature"),
                         )
-                        stream.push(AssistantMessageEventThinkingDelta(
-                            content_index=_block_index(),
-                            delta=reasoning_delta,
-                            partial=output,
-                        ))
+                        stream.push(
+                            AssistantMessageEventThinkingDelta(
+                                content_index=_block_index(),
+                                delta=reasoning_delta,
+                                partial=output,
+                            )
+                        )
 
                 # --- Tool calls ---
                 tool_calls_delta = delta.get("tool_calls")
@@ -873,16 +939,20 @@ def stream_openai_completions(
                                 "id": tc_id or "",
                                 "name": tc_name or "",
                             }
-                            output.content.append(ToolCall(
-                                type="toolCall",
-                                id=current_block["id"],
-                                name=current_block["name"],
-                                arguments={},
-                            ))
-                            stream.push(AssistantMessageEventToolcallStart(
-                                content_index=_block_index(),
-                                partial=output,
-                            ))
+                            output.content.append(
+                                ToolCall(
+                                    type="toolCall",
+                                    id=current_block["id"],
+                                    name=current_block["name"],
+                                    arguments={},
+                                )
+                            )
+                            stream.push(
+                                AssistantMessageEventToolcallStart(
+                                    content_index=_block_index(),
+                                    partial=output,
+                                )
+                            )
 
                         if current_block["type"] == "toolCall":
                             if tc_id:
@@ -902,11 +972,13 @@ def stream_openai_completions(
                                     arguments=parsed,
                                 )
 
-                            stream.push(AssistantMessageEventToolcallDelta(
-                                content_index=_block_index(),
-                                delta=delta_str,
-                                partial=output,
-                            ))
+                            stream.push(
+                                AssistantMessageEventToolcallDelta(
+                                    content_index=_block_index(),
+                                    delta=delta_str,
+                                    partial=output,
+                                )
+                            )
 
                 # --- Reasoning details (encrypted thought signatures) ---
                 reasoning_details = delta.get("reasoning_details")
@@ -933,16 +1005,16 @@ def stream_openai_completions(
 
             # Ensure stopReason is valid for "done" event
             final_reason: Literal["stop", "length", "toolUse"] = (
-                output.stop_reason if output.stop_reason in ("stop", "length", "toolUse") else "stop"
+                output.stop_reason
+                if output.stop_reason in ("stop", "length", "toolUse")
+                else "stop"
             )
             stream.push(AssistantMessageEventDone(reason=final_reason, message=output))
             stream.end()
 
         except Exception as error:
             output.stop_reason = (
-                "aborted"
-                if (options and options.signal and options.signal.is_set())
-                else "error"
+                "aborted" if (options and options.signal and options.signal.is_set()) else "error"
             )
             error_msg = error.args[0] if error.args else str(error)
             # Some providers via OpenRouter give additional information
@@ -983,62 +1055,28 @@ def stream_simple_openai_completions(
 
     base = build_base_options(model, options, api_key)
     reasoning_effort = (
-        options.reasoning if options and supports_xhigh(model) else clamp_reasoning(options.reasoning if options else None)
-    )
-
-    return stream_openai_completions(model, context, OpenAICompletionsOptions(
-        temperature=base.temperature,
-        max_tokens=base.max_tokens,
-        signal=base.signal,
-        api_key=base.api_key,
-        transport=base.transport,
-        cache_retention=base.cache_retention,
-        session_id=base.session_id,
-        on_payload=base.on_payload,
-        headers=base.headers,
-        max_retry_delay_ms=base.max_retry_delay_ms,
-        metadata=base.metadata,
-        reasoning_effort=reasoning_effort,
-    ))
-
-
-def stream_simple_openai_completions(
-    model: Model,
-    context: Context,
-    options: SimpleStreamOptions | None = None,
-) -> AssistantMessageEventStream:
-    """Stream with simplified options (includes reasoning level support).
-
-    Wraps :func:`stream_openai_completions` with automatic reasoning effort
-    clamping and base option building.
-    """
-    from otter_ai.env_api_keys import get_env_api_key
-
-    api_key = get_env_api_key(model.provider)
-    if not api_key:
-        api_key = options.api_key if options else None
-    if not api_key:
-        msg = f"No API key for provider: {model.provider}"
-        raise RuntimeError(msg)
-
-    base = build_base_options(model, options, api_key)
-    reasoning_effort = (
-        options.reasoning if options and supports_xhigh(model) else clamp_reasoning(options.reasoning if options else None)
+        options.reasoning
+        if options and supports_xhigh(model)
+        else clamp_reasoning(options.reasoning if options else None)
     )
     tool_choice = None
 
-    return stream_openai_completions(model, context, OpenAICompletionsOptions(
-        temperature=base.temperature,
-        max_tokens=base.max_tokens,
-        signal=base.signal,
-        api_key=base.api_key,
-        transport=base.transport,
-        cache_retention=base.cache_retention,
-        session_id=base.session_id,
-        on_payload=base.on_payload,
-        headers=base.headers,
-        max_retry_delay_ms=base.max_retry_delay_ms,
-        metadata=base.metadata,
-        tool_choice=tool_choice,
-        reasoning_effort=reasoning_effort,
-    ))
+    return stream_openai_completions(
+        model,
+        context,
+        OpenAICompletionsOptions(
+            temperature=base.temperature,
+            max_tokens=base.max_tokens,
+            signal=base.signal,
+            api_key=base.api_key,
+            transport=base.transport,
+            cache_retention=base.cache_retention,
+            session_id=base.session_id,
+            on_payload=base.on_payload,
+            headers=base.headers,
+            max_retry_delay_ms=base.max_retry_delay_ms,
+            metadata=base.metadata,
+            tool_choice=tool_choice,
+            reasoning_effort=reasoning_effort,
+        ),
+    )

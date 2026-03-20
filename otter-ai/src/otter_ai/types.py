@@ -348,7 +348,7 @@ class Context:
     """The conversation context passed to an LLM provider."""
 
     system_prompt: str | None = None
-    messages: list[Message] = field(default_factory=list)
+    messages: list[Message] = field(default_factory=list[Message])
     tools: list[Tool] | None = None
 
 

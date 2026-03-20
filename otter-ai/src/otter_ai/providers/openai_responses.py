@@ -7,7 +7,6 @@ Upstream: packages/ai/src/providers/openai-responses.ts (~262 lines)
 
 from __future__ import annotations
 
-import json
 import os
 import time
 from dataclasses import dataclass
@@ -95,7 +94,8 @@ def _create_client(
         api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass it as an argument."
+            "OpenAI API key is required. Set "
+            "OPENAI_API_KEY environment variable or pass it as an argument."
         )
 
     headers: dict[str, str] = {}
@@ -132,9 +132,7 @@ def _build_params(
 ) -> dict[str, Any]:
     messages = convert_responses_messages(model, context, _OPENAI_TOOL_CALL_PROVIDERS)
 
-    cache_retention = _resolve_cache_retention(
-        options.cache_retention if options else None
-    )
+    cache_retention = _resolve_cache_retention(options.cache_retention if options else None)
     params: dict[str, Any] = {
         "model": model.id,
         "input": messages,
@@ -145,7 +143,8 @@ def _build_params(
     if cache_retention != "none" and options and options.session_id:
         params["prompt_cache_key"] = options.session_id
     prompt_cache = _get_prompt_cache_retention(
-        getattr(model, "base_url", None), cache_retention,
+        getattr(model, "base_url", None),
+        cache_retention,
     )
     if prompt_cache:
         params["prompt_cache_retention"] = prompt_cache
@@ -172,13 +171,17 @@ def _build_params(
         else:
             model_name = getattr(model, "name", "") or ""
             if model_name.lower().startswith("gpt-5"):
-                messages.append({
-                    "role": "developer",
-                    "content": [{
-                        "type": "input_text",
-                        "text": "# Juice: 0 !important",
-                    }],
-                })
+                messages.append(
+                    {
+                        "role": "developer",
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "# Juice: 0 !important",
+                            }
+                        ],
+                    }
+                )
 
     return params
 
@@ -210,8 +213,7 @@ def _apply_service_tier_pricing(
     usage.cost.cache_read *= multiplier
     usage.cost.cache_write *= multiplier
     usage.cost.total = (
-        usage.cost.input + usage.cost.output
-        + usage.cost.cache_read + usage.cost.cache_write
+        usage.cost.input + usage.cost.output + usage.cost.cache_read + usage.cost.cache_write
     )
 
 
@@ -244,7 +246,9 @@ def stream_openai_responses(
         )
 
         try:
-            api_key = (options.api_key if options else None) or get_env_api_key(model.provider) or ""
+            api_key = (
+                (options.api_key if options else None) or get_env_api_key(model.provider) or ""
+            )
             client = _create_client(model, context, api_key, options.headers if options else None)
             params = _build_params(model, context, options)
 
@@ -260,7 +264,10 @@ def stream_openai_responses(
             stream.push(AssistantMessageEventStart(partial=output))
 
             await process_responses_stream(
-                openai_stream, output, stream, model,
+                openai_stream,
+                output,
+                stream,
+                model,
                 OpenAIResponsesStreamOptions(
                     service_tier=options.service_tier if options else None,
                     apply_service_tier_pricing=_apply_service_tier_pricing,
@@ -278,15 +285,14 @@ def stream_openai_responses(
 
         except Exception as error:
             output.stop_reason = (
-                "aborted"
-                if (options and options.signal and options.signal.is_set())
-                else "error"
+                "aborted" if (options and options.signal and options.signal.is_set()) else "error"
             )
-            output.error_message = error.message if isinstance(error, Exception) else json.dumps(error)  # type: ignore[union-attr]
+            output.error_message = error.args[0] if error.args else str(error)
             stream.push(AssistantMessageEventError(reason=output.stop_reason, error=output))
             stream.end()
 
     import asyncio
+
     asyncio.create_task(_run())
     return stream
 
@@ -306,16 +312,22 @@ def stream_simple_openai_responses(
 
     base = build_base_options(model, options, api_key)
     reasoning_effort = (
-        options.reasoning if (options and supports_xhigh(model)) else (clamp_reasoning(options.reasoning) if options else None)
+        options.reasoning
+        if (options and supports_xhigh(model))
+        else (clamp_reasoning(options.reasoning) if options else None)
     )
 
-    return stream_openai_responses(model, context, OpenAIResponsesOptions(
-        api_key=base.api_key,
-        max_tokens=base.max_tokens,
-        temperature=base.temperature,
-        signal=base.signal,
-        headers=base.headers,
-        on_payload=base.on_payload,
-        metadata=base.metadata,
-        reasoning_effort=reasoning_effort,
-    ))
+    return stream_openai_responses(
+        model,
+        context,
+        OpenAIResponsesOptions(
+            api_key=base.api_key,
+            max_tokens=base.max_tokens,
+            temperature=base.temperature,
+            signal=base.signal,
+            headers=base.headers,
+            on_payload=base.on_payload,
+            metadata=base.metadata,
+            reasoning_effort=reasoning_effort,
+        ),
+    )

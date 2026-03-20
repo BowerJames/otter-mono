@@ -97,11 +97,7 @@ def _create_lazy_stream(
                 await _forward_stream(outer, inner)
             except Exception as exc:
                 msg = _create_lazy_load_error_message(model)
-                err_name = (
-                    exc.__class__.__name__
-                    if hasattr(exc, "__class__")
-                    else str(exc)
-                )
+                err_name = exc.__class__.__name__ if hasattr(exc, "__class__") else str(exc)
                 msg.error_message = err_name
                 if str(exc):
                     msg.error_message += f": {exc}"
@@ -128,7 +124,8 @@ def _create_lazy_stream(
 # ============================================================================
 
 _load_promises: dict[str, asyncio.Task[Any] | None] = {
-    name: None for name in (
+    name: None
+    for name in (
         "anthropic",
         "openai_completions",
         "openai_responses",
@@ -169,67 +166,86 @@ def _load_provider_module(provider_name: str) -> Any:
 # ============================================================================
 
 stream_anthropic = _create_lazy_stream(
-    lambda: _load_provider_module("anthropic"), "stream_anthropic",
+    lambda: _load_provider_module("anthropic"),
+    "stream_anthropic",
 )
 stream_simple_anthropic = _create_lazy_stream(
-    lambda: _load_provider_module("anthropic"), "stream_simple_anthropic",
+    lambda: _load_provider_module("anthropic"),
+    "stream_simple_anthropic",
 )
 
 stream_openai_completions = _create_lazy_stream(
-    lambda: _load_provider_module("openai_completions"), "stream_openai_completions",
+    lambda: _load_provider_module("openai_completions"),
+    "stream_openai_completions",
 )
 stream_simple_openai_completions = _create_lazy_stream(
-    lambda: _load_provider_module("openai_completions"), "stream_simple_openai_completions",
+    lambda: _load_provider_module("openai_completions"),
+    "stream_simple_openai_completions",
 )
 
 stream_openai_responses = _create_lazy_stream(
-    lambda: _load_provider_module("openai_responses"), "stream_openai_responses",
+    lambda: _load_provider_module("openai_responses"),
+    "stream_openai_responses",
 )
 stream_simple_openai_responses = _create_lazy_stream(
-    lambda: _load_provider_module("openai_responses"), "stream_simple_openai_responses",
+    lambda: _load_provider_module("openai_responses"),
+    "stream_simple_openai_responses",
 )
 
 stream_azure_openai_responses = _create_lazy_stream(
-    lambda: _load_provider_module("azure_openai_responses"), "stream_azure_openai_responses",
+    lambda: _load_provider_module("azure_openai_responses"),
+    "stream_azure_openai_responses",
 )
 stream_simple_azure_openai_responses = _create_lazy_stream(
-    lambda: _load_provider_module("azure_openai_responses"), "stream_simple_azure_openai_responses",
+    lambda: _load_provider_module("azure_openai_responses"),
+    "stream_simple_azure_openai_responses",
 )
 
 stream_google = _create_lazy_stream(
-    lambda: _load_provider_module("google"), "stream_google",
+    lambda: _load_provider_module("google"),
+    "stream_google",
 )
 stream_simple_google = _create_lazy_stream(
-    lambda: _load_provider_module("google"), "stream_simple_google",
+    lambda: _load_provider_module("google"),
+    "stream_simple_google",
 )
 
 stream_google_vertex = _create_lazy_stream(
-    lambda: _load_provider_module("google_vertex"), "stream_google_vertex",
+    lambda: _load_provider_module("google_vertex"),
+    "stream_google_vertex",
 )
 stream_simple_google_vertex = _create_lazy_stream(
-    lambda: _load_provider_module("google_vertex"), "stream_simple_google_vertex",
+    lambda: _load_provider_module("google_vertex"),
+    "stream_simple_google_vertex",
 )
 
 stream_google_gemini_cli = _create_lazy_stream(
-    lambda: _load_provider_module("google_gemini_cli"), "stream_google_gemini_cli",
+    lambda: _load_provider_module("google_gemini_cli"),
+    "stream_google_gemini_cli",
 )
 stream_simple_google_gemini_cli = _create_lazy_stream(
-    lambda: _load_provider_module("google_gemini_cli"), "stream_simple_google_gemini_cli",
+    lambda: _load_provider_module("google_gemini_cli"),
+    "stream_simple_google_gemini_cli",
 )
 
 stream_mistral = _create_lazy_stream(
-    lambda: _load_provider_module("mistral"), "stream_mistral",
+    lambda: _load_provider_module("mistral"),
+    "stream_mistral",
 )
 stream_simple_mistral = _create_lazy_stream(
-    lambda: _load_provider_module("mistral"), "stream_simple_mistral",
+    lambda: _load_provider_module("mistral"),
+    "stream_simple_mistral",
 )
 
 stream_openai_codex_responses = _create_lazy_stream(
-    lambda: _load_provider_module("openai_codex_responses"), "stream_openai_codex_responses",
+    lambda: _load_provider_module("openai_codex_responses"),
+    "stream_openai_codex_responses",
 )
 stream_simple_openai_codex_responses = _create_lazy_stream(
-    lambda: _load_provider_module("openai_codex_responses"), "stream_simple_openai_codex_responses",
+    lambda: _load_provider_module("openai_codex_responses"),
+    "stream_simple_openai_codex_responses",
 )
+
 
 def _load_bedrock_module() -> Any:
     """Load the Bedrock provider module, checking for an override first.
@@ -244,10 +260,12 @@ def _load_bedrock_module() -> Any:
 
 
 stream_bedrock = _create_lazy_stream(
-    _load_bedrock_module, "stream_bedrock",
+    _load_bedrock_module,
+    "stream_bedrock",
 )
 stream_simple_bedrock = _create_lazy_stream(
-    _load_bedrock_module, "stream_simple_bedrock",
+    _load_bedrock_module,
+    "stream_simple_bedrock",
 )
 
 

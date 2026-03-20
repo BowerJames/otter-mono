@@ -7,7 +7,6 @@ Upstream: packages/ai/src/providers/azure-openai-responses.ts (~259 lines)
 
 from __future__ import annotations
 
-import json
 import os
 import time
 from dataclasses import dataclass
@@ -34,9 +33,14 @@ from .openai_responses_shared import (
 )
 from .simple_options import build_base_options, clamp_reasoning
 
-_AZURE_TOOL_CALL_PROVIDERS = frozenset([
-    "openai", "openai-codex", "opencode", "azure-openai-responses",
-])
+_AZURE_TOOL_CALL_PROVIDERS = frozenset(
+    [
+        "openai",
+        "openai-codex",
+        "opencode",
+        "azure-openai-responses",
+    ]
+)
 
 _DEFAULT_AZURE_API_VERSION = "v1"
 
@@ -87,9 +91,7 @@ def _resolve_deployment_name(
 ) -> str:
     if options and options.azure_deployment_name:
         return options.azure_deployment_name
-    env_map = _parse_deployment_name_map(
-        os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME_MAP")
-    )
+    env_map = _parse_deployment_name_map(os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME_MAP"))
     return env_map.get(model.id, model.id) or model.id
 
 
@@ -117,9 +119,8 @@ def _resolve_azure_config(
         or os.environ.get("AZURE_OPENAI_BASE_URL", "").strip()
         or None
     )
-    resource_name = (
-        (options.azure_resource_name if options else None)
-        or os.environ.get("AZURE_OPENAI_RESOURCE_NAME")
+    resource_name = (options.azure_resource_name if options else None) or os.environ.get(
+        "AZURE_OPENAI_RESOURCE_NAME"
     )
 
     resolved = base_url
@@ -150,7 +151,8 @@ def _create_client(
         api_key = os.environ.get("AZURE_OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "Azure OpenAI API key is required. Set AZURE_OPENAI_API_KEY environment variable or pass it as an argument."
+            "Azure OpenAI API key is required. Set "
+            "AZURE_OPENAI_API_KEY environment variable or pass it as an argument."
         )
 
     headers: dict[str, str] = {}
@@ -210,13 +212,17 @@ def _build_params(
         else:
             model_name = getattr(model, "name", "") or ""
             if model_name.lower().startswith("gpt-5"):
-                messages.append({
-                    "role": "developer",
-                    "content": [{
-                        "type": "input_text",
-                        "text": "# Juice: 0 !important",
-                    }],
-                })
+                messages.append(
+                    {
+                        "role": "developer",
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "# Juice: 0 !important",
+                            }
+                        ],
+                    }
+                )
 
     return params
 
@@ -252,7 +258,9 @@ def stream_azure_openai_responses(
         )
 
         try:
-            api_key = (options.api_key if options else None) or get_env_api_key(model.provider) or ""
+            api_key = (
+                (options.api_key if options else None) or get_env_api_key(model.provider) or ""
+            )
             client = _create_client(model, api_key, options)
             params = _build_params(model, context, options, deployment_name)
 
@@ -280,15 +288,14 @@ def stream_azure_openai_responses(
 
         except Exception as error:
             output.stop_reason = (
-                "aborted"
-                if (options and options.signal and options.signal.is_set())
-                else "error"
+                "aborted" if (options and options.signal and options.signal.is_set()) else "error"
             )
-            output.error_message = error.message if isinstance(error, Exception) else json.dumps(error)  # type: ignore[union-attr]
+            output.error_message = error.args[0] if error.args else str(error)
             stream.push(AssistantMessageEventError(reason=output.stop_reason, error=output))
             stream.end()
 
     import asyncio
+
     asyncio.create_task(_run())
     return stream
 
@@ -308,16 +315,22 @@ def stream_simple_azure_openai_responses(
 
     base = build_base_options(model, options, api_key)
     reasoning_effort = (
-        options.reasoning if (options and supports_xhigh(model)) else (clamp_reasoning(options.reasoning) if options else None)
+        options.reasoning
+        if (options and supports_xhigh(model))
+        else (clamp_reasoning(options.reasoning) if options else None)
     )
 
-    return stream_azure_openai_responses(model, context, AzureOpenAIResponsesOptions(
-        api_key=base.api_key,
-        max_tokens=base.max_tokens,
-        temperature=base.temperature,
-        signal=base.signal,
-        headers=base.headers,
-        on_payload=base.on_payload,
-        metadata=base.metadata,
-        reasoning_effort=reasoning_effort,
-    ))
+    return stream_azure_openai_responses(
+        model,
+        context,
+        AzureOpenAIResponsesOptions(
+            api_key=base.api_key,
+            max_tokens=base.max_tokens,
+            temperature=base.temperature,
+            signal=base.signal,
+            headers=base.headers,
+            on_payload=base.on_payload,
+            metadata=base.metadata,
+            reasoning_effort=reasoning_effort,
+        ),
+    )

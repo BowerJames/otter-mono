@@ -8,6 +8,7 @@ Upstream: packages/ai/src/providers/mistral.ts (~585 lines)
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -105,8 +106,6 @@ def _derive_mistral_tool_call_id(tool_call_id: str, attempt: int) -> str:
     return re.sub(r"[^a-zA-Z0-9]", "", short_hash(seed))[:_MISTRAL_TOOL_CALL_ID_LENGTH]
 
 
-import re
-
 # ============================================================================
 # Error formatting
 # ============================================================================
@@ -118,7 +117,10 @@ def _format_mistral_error(error: Any) -> str:
         body = getattr(error, "body", None)
         body_text = body.strip() if isinstance(body, str) else None
         if isinstance(status_code, int) and body_text:
-            return f"Mistral API error ({status_code}): {_truncate_error_text(body_text, _MAX_MISTRAL_ERROR_BODY_CHARS)}"
+            return (
+                f"Mistral API error ({status_code}): "
+                f"{_truncate_error_text(body_text, _MAX_MISTRAL_ERROR_BODY_CHARS)}"
+            )
         if isinstance(status_code, int):
             return f"Mistral API error ({status_code}): {error}"
         return str(error)
@@ -158,15 +160,19 @@ def _to_chat_messages(messages: list[Any], supports_images: bool) -> list[dict[s
                 if item.type == "text":
                     content.append({"type": "text", "text": sanitize_surrogates(item.text)})
                 elif supports_images:
-                    content.append({
-                        "type": "image_url",
-                        "image_url": f"data:{item.mime_type};base64,{item.data}",
-                    })
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": f"data:{item.mime_type};base64,{item.data}",
+                        }
+                    )
 
             if content:
                 result.append({"role": "user", "content": content})
             elif had_images and not supports_images:
-                result.append({"role": "user", "content": "(image omitted: model does not support images)"})
+                result.append(
+                    {"role": "user", "content": "(image omitted: model does not support images)"}
+                )
 
         elif msg.role == "assistant":
             content_parts: list[dict[str, Any]] = []
@@ -175,19 +181,30 @@ def _to_chat_messages(messages: list[Any], supports_images: bool) -> list[dict[s
             for block in msg.content:
                 if block.type == "text":
                     if block.text.strip():
-                        content_parts.append({"type": "text", "text": sanitize_surrogates(block.text)})
+                        content_parts.append(
+                            {"type": "text", "text": sanitize_surrogates(block.text)}
+                        )
                 elif block.type == "thinking":
                     if block.thinking.strip():
-                        content_parts.append({
-                            "type": "thinking",
-                            "thinking": [{"type": "text", "text": sanitize_surrogates(block.thinking)}],
-                        })
+                        content_parts.append(
+                            {
+                                "type": "thinking",
+                                "thinking": [
+                                    {"type": "text", "text": sanitize_surrogates(block.thinking)}
+                                ],
+                            }
+                        )
                 elif block.type == "toolCall":
-                    tool_calls.append({
-                        "id": block.id,
-                        "type": "function",
-                        "function": {"name": block.name, "arguments": json.dumps(block.arguments or {})},
-                    })
+                    tool_calls.append(
+                        {
+                            "id": block.id,
+                            "type": "function",
+                            "function": {
+                                "name": block.name,
+                                "arguments": json.dumps(block.arguments or {}),
+                            },
+                        }
+                    )
 
             assistant_msg: dict[str, Any] = {"role": "assistant"}
             if content_parts:
@@ -202,35 +219,48 @@ def _to_chat_messages(messages: list[Any], supports_images: bool) -> list[dict[s
             text_result = "\n".join(sanitize_surrogates(c.text) for c in text_parts)
             has_images = any(c.type == "image" for c in msg.content)
 
-            tool_text = _build_tool_result_text(text_result, has_images, supports_images, msg.is_error)
+            tool_text = _build_tool_result_text(
+                text_result, has_images, supports_images, msg.is_error
+            )
             tool_content: list[dict[str, Any]] = [{"type": "text", "text": tool_text}]
 
             if supports_images:
                 for part in msg.content:
                     if part.type == "image":
-                        tool_content.append({
-                            "type": "image_url",
-                            "image_url": f"data:{part.mime_type};base64,{part.data}",
-                        })
+                        tool_content.append(
+                            {
+                                "type": "image_url",
+                                "image_url": f"data:{part.mime_type};base64,{part.data}",
+                            }
+                        )
 
-            result.append({
-                "role": "tool",
-                "tool_call_id": msg.tool_call_id,
-                "name": msg.tool_name,
-                "content": tool_content,
-            })
+            result.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": msg.tool_call_id,
+                    "name": msg.tool_name,
+                    "content": tool_content,
+                }
+            )
 
     return result
 
 
 def _build_tool_result_text(
-    text: str, has_images: bool, supports_images: bool, is_error: bool,
+    text: str,
+    has_images: bool,
+    supports_images: bool,
+    is_error: bool,
 ) -> str:
     trimmed = text.strip()
     error_prefix = "[tool error] " if is_error else ""
 
     if trimmed:
-        suffix = "\n[tool image omitted: model does not support images]" if (has_images and not supports_images) else ""
+        suffix = (
+            "\n[tool image omitted: model does not support images]"
+            if (has_images and not supports_images)
+            else ""
+        )
         return f"{error_prefix}{trimmed}{suffix}"
 
     if has_images:
@@ -356,12 +386,15 @@ def stream_mistral(
             stream.end()
 
         except Exception as error:
-            output.stop_reason = "aborted" if (options and options.signal and options.signal.is_set()) else "error"
+            output.stop_reason = (
+                "aborted" if (options and options.signal and options.signal.is_set()) else "error"
+            )
             output.error_message = _format_mistral_error(error)
             stream.push(AssistantMessageEventError(reason=output.stop_reason, error=output))
             stream.end()
 
     import asyncio
+
     asyncio.create_task(_run())
     return stream
 
@@ -386,13 +419,21 @@ async def _consume_chat_stream(
             return
         idx = len(blocks) - 1
         if block.type == "text":
-            stream.push(AssistantMessageEventTextEnd(
-                content_index=idx, content=block.text, partial=output,
-            ))
+            stream.push(
+                AssistantMessageEventTextEnd(
+                    content_index=idx,
+                    content=block.text,
+                    partial=output,
+                )
+            )
         elif block.type == "thinking":
-            stream.push(AssistantMessageEventThinkingEnd(
-                content_index=idx, content=block.thinking, partial=output,
-            ))
+            stream.push(
+                AssistantMessageEventThinkingEnd(
+                    content_index=idx,
+                    content=block.thinking,
+                    partial=output,
+                )
+            )
 
     async for event in mistral_stream:
         chunk = event.data
@@ -406,8 +447,7 @@ async def _consume_chat_stream(
             output.usage.cache_read = 0
             output.usage.cache_write = 0
             output.usage.total_tokens = (
-                getattr(chunk.usage, "total_tokens", 0)
-                or output.usage.input + output.usage.output
+                getattr(chunk.usage, "total_tokens", 0) or output.usage.input + output.usage.output
             )
             calculate_cost(model, output.usage)
 
@@ -434,9 +474,17 @@ async def _consume_chat_stream(
                         finish_block(current_block)
                         current_block = TextContent(type="text", text="")
                         output.content.append(current_block)
-                        stream.push(AssistantMessageEventTextStart(content_index=block_index(), partial=output))
+                        stream.push(
+                            AssistantMessageEventTextStart(
+                                content_index=block_index(), partial=output
+                            )
+                        )
                     current_block.text += text_delta
-                    stream.push(AssistantMessageEventTextDelta(content_index=block_index(), delta=text_delta, partial=output))
+                    stream.push(
+                        AssistantMessageEventTextDelta(
+                            content_index=block_index(), delta=text_delta, partial=output
+                        )
+                    )
                     continue
 
                 item_type = getattr(item, "type", None)
@@ -453,9 +501,17 @@ async def _consume_chat_stream(
                         finish_block(current_block)
                         current_block = ThinkingContent(type="thinking", thinking="")
                         output.content.append(current_block)
-                        stream.push(AssistantMessageEventThinkingStart(content_index=block_index(), partial=output))
+                        stream.push(
+                            AssistantMessageEventThinkingStart(
+                                content_index=block_index(), partial=output
+                            )
+                        )
                     current_block.thinking += thinking_delta
-                    stream.push(AssistantMessageEventThinkingDelta(content_index=block_index(), delta=thinking_delta, partial=output))
+                    stream.push(
+                        AssistantMessageEventThinkingDelta(
+                            content_index=block_index(), delta=thinking_delta, partial=output
+                        )
+                    )
                     continue
 
                 if item_type == "text":
@@ -464,9 +520,17 @@ async def _consume_chat_stream(
                         finish_block(current_block)
                         current_block = TextContent(type="text", text="")
                         output.content.append(current_block)
-                        stream.push(AssistantMessageEventTextStart(content_index=block_index(), partial=output))
+                        stream.push(
+                            AssistantMessageEventTextStart(
+                                content_index=block_index(), partial=output
+                            )
+                        )
                     current_block.text += text_delta
-                    stream.push(AssistantMessageEventTextDelta(content_index=block_index(), delta=text_delta, partial=output))
+                    stream.push(
+                        AssistantMessageEventTextDelta(
+                            content_index=block_index(), delta=text_delta, partial=output
+                        )
+                    )
 
         # Tool calls
         tool_calls = getattr(delta, "tool_calls", None) or []
@@ -484,10 +548,7 @@ async def _consume_chat_stream(
 
             if existing_idx is not None:
                 existing = output.content[existing_idx]
-                if existing.type == "toolCall":
-                    block = existing
-                else:
-                    block = None
+                block = existing if existing.type == "toolCall" else None
             else:
                 block = None
 
@@ -502,19 +563,30 @@ async def _consume_chat_stream(
                 block._partial_args = ""  # type: ignore[attr-defined]
                 output.content.append(block)
                 tool_blocks_by_key[key] = len(output.content) - 1
-                stream.push(AssistantMessageEventToolcallStart(
-                    content_index=len(output.content) - 1, partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventToolcallStart(
+                        content_index=len(output.content) - 1,
+                        partial=output,
+                    )
+                )
 
             func = tc.function
-            args_delta = func.arguments if isinstance(func.arguments, str) else json.dumps(func.arguments or {})
+            args_delta = (
+                func.arguments
+                if isinstance(func.arguments, str)
+                else json.dumps(func.arguments or {})
+            )
             partial = getattr(block, "_partial_args", "") or ""
             partial += args_delta
             block._partial_args = partial  # type: ignore[attr-defined]
             block.arguments = parse_streaming_json(partial) or {}
-            stream.push(AssistantMessageEventToolcallDelta(
-                content_index=tool_blocks_by_key[key], delta=args_delta, partial=output,
-            ))
+            stream.push(
+                AssistantMessageEventToolcallDelta(
+                    content_index=tool_blocks_by_key[key],
+                    delta=args_delta,
+                    partial=output,
+                )
+            )
 
     finish_block(current_block)
 
@@ -526,7 +598,9 @@ async def _consume_chat_stream(
         block.arguments = parse_streaming_json(partial) or {}
         if hasattr(block, "_partial_args"):
             del block._partial_args  # type: ignore[attr-defined]
-        stream.push(AssistantMessageEventToolcallEnd(content_index=idx, tool_call=block, partial=output))
+        stream.push(
+            AssistantMessageEventToolcallEnd(content_index=idx, tool_call=block, partial=output)
+        )
 
 
 def _build_chat_payload(
@@ -553,10 +627,13 @@ def _build_chat_payload(
         payload["prompt_mode"] = options.prompt_mode
 
     if context.system_prompt:
-        payload["messages"].insert(0, {
-            "role": "system",
-            "content": sanitize_surrogates(context.system_prompt),
-        })
+        payload["messages"].insert(
+            0,
+            {
+                "role": "system",
+                "content": sanitize_surrogates(context.system_prompt),
+            },
+        )
 
     return payload
 
@@ -577,13 +654,17 @@ def stream_simple_mistral(
     base = build_base_options(model, options, api_key)
     reasoning = clamp_reasoning(options.reasoning) if options else None
 
-    return stream_mistral(model, context, MistralOptions(
-        api_key=base.api_key,
-        max_tokens=base.max_tokens,
-        temperature=base.temperature,
-        signal=base.signal,
-        headers=base.headers,
-        on_payload=base.on_payload,
-        metadata=base.metadata,
-        prompt_mode="reasoning" if (model.reasoning and reasoning) else None,
-    ))
+    return stream_mistral(
+        model,
+        context,
+        MistralOptions(
+            api_key=base.api_key,
+            max_tokens=base.max_tokens,
+            temperature=base.temperature,
+            signal=base.signal,
+            headers=base.headers,
+            on_payload=base.on_payload,
+            metadata=base.metadata,
+            prompt_mode="reasoning" if (model.reasoning and reasoning) else None,
+        ),
+    )

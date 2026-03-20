@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import json
 
+from pydantic import ValidationError as PydanticValidationError
+
 from otter_ai.exceptions import ValidationError as OtterValidationError
 from otter_ai.types import Tool, ToolCall
 
@@ -69,17 +71,14 @@ def validate_tool_arguments(tool: Tool, tool_call: ToolCall) -> object:
         model_cls = tool.parameters
         result = model_cls.model_validate(tool_call.arguments)
         return result.model_dump()
-    except Exception as exc:
-        # Handle both pydantic ValidationError and other unexpected errors
-        errors = ""
-        if hasattr(exc, "errors"):
-            errors = (
-                "\n".join(
-                    f"  - {err['loc'][-1] if err['loc'] else 'root'}: {err['msg']}"
-                    for err in exc.errors()
-                )
-                or "Unknown validation error"
+    except PydanticValidationError as exc:
+        errors = (
+            "\n".join(
+                f"  - {err['loc'][-1] if err['loc'] else 'root'}: {err['msg']}"
+                for err in exc.errors()
             )
+            or "Unknown validation error"
+        )
 
         received = json.dumps(tool_call.arguments, indent=2)
         msg = (
@@ -87,4 +86,7 @@ def validate_tool_arguments(tool: Tool, tool_call: ToolCall) -> object:
             f"{errors}\n\n"
             f"Received arguments:\n{received}"
         )
+        raise OtterValidationError(msg) from exc
+    except Exception as exc:
+        msg = f'Validation failed for tool "{tool_call.name}": {exc}'
         raise OtterValidationError(msg) from exc

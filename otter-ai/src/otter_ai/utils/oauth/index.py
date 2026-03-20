@@ -23,7 +23,6 @@ from otter_ai.utils.oauth.types import (
     OAuthProviderInterface,
 )
 
-
 # ============================================================================
 # Provider Registry
 # ============================================================================
@@ -34,9 +33,9 @@ from otter_ai.utils.oauth.types import (
 _oauth_provider_registry: dict[str, OAuthProviderInterface] = {}
 
 
-def get_oauth_provider(id: OAuthProviderId) -> OAuthProviderInterface | None:
+def get_oauth_provider(provider_id: OAuthProviderId) -> OAuthProviderInterface | None:
     """Get an OAuth provider by ID."""
-    return _oauth_provider_registry.get(id)
+    return _oauth_provider_registry.get(provider_id)
 
 
 def register_oauth_provider(provider: OAuthProviderInterface) -> None:
@@ -44,14 +43,14 @@ def register_oauth_provider(provider: OAuthProviderInterface) -> None:
     _oauth_provider_registry[provider.id] = provider
 
 
-def unregister_oauth_provider(id: str) -> None:
+def unregister_oauth_provider(provider_id: str) -> None:
     """Unregister an OAuth provider.
 
     If the provider is built-in, restores the built-in implementation.
     Custom providers are removed completely.
     """
     # Once built-in providers are implemented (#16), check against them here.
-    _oauth_provider_registry.pop(id, None)
+    _oauth_provider_registry.pop(provider_id, None)
 
 
 def reset_oauth_providers() -> None:
@@ -78,10 +77,7 @@ def get_oauth_provider_info_list() -> list[OAuthProviderInfo]:
         Use :func:`get_oauth_providers` which returns
         :class:`OAuthProviderInterface` instances.
     """
-    return [
-        OAuthProviderInfo(id=p.id, name=p.name, available=True)
-        for p in get_oauth_providers()
-    ]
+    return [OAuthProviderInfo(id=p.id, name=p.name, available=True) for p in get_oauth_providers()]
 
 
 # ============================================================================

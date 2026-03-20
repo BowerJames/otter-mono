@@ -22,6 +22,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def _escape_py(s: str) -> str:
@@ -75,7 +76,7 @@ def _fmt_compat(compat_str: str) -> str:
 
 def _parse_model_block(lines: list[str]) -> dict[str, str] | None:
     """Parse a single model block from lines, returning a dict of field→value."""
-    fields: dict[str, str] = {}
+    fields: dict[str, Any] = {}
     i = 0
     while i < len(lines):
         line = lines[i].strip()
@@ -138,12 +139,12 @@ def _parse_model_block(lines: list[str]) -> dict[str, str] | None:
     return fields if fields else None
 
 
-def parse_generated_ts(source: str) -> dict[str, dict[str, dict[str, str]]]:
+def parse_generated_ts(source: str) -> dict[str, dict[str, dict[str, Any]]]:
     """Parse upstream ``models.generated.ts`` into a nested dict.
 
     Returns ``{ provider: { model_id: { field: value } } }``.
     """
-    result: dict[str, dict[str, dict[str, str]]] = {}
+    result: dict[str, dict[str, dict[str, Any]]] = {}
 
     # Split into provider blocks
     provider_pattern = re.compile(r'^\t"([^"]+)":\s*\{', re.MULTILINE)
@@ -173,7 +174,7 @@ def parse_generated_ts(source: str) -> dict[str, dict[str, dict[str, str]]]:
     return result
 
 
-def generate_python(models: dict[str, dict[str, dict[str, str]]]) -> str:
+def generate_python(models: dict[str, dict[str, dict[str, Any]]]) -> str:
     """Generate the Python ``models_generated.py`` source code."""
     parts: list[str] = []
 

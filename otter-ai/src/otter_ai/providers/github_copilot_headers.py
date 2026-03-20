@@ -31,12 +31,14 @@ def has_copilot_vision_input(messages: list[Message]) -> bool:
     Used to determine whether the ``Copilot-Vision-Request`` header is needed.
     """
     for msg in messages:
-        if msg.role == "user" and not isinstance(msg.content, str):
-            if any(block.type == "image" for block in msg.content):
-                return True
-        if msg.role == "toolResult":
-            if any(block.type == "image" for block in msg.content):
-                return True
+        if (
+            msg.role == "user"
+            and not isinstance(msg.content, str)
+            and any(block.type == "image" for block in msg.content)
+        ):
+            return True
+        if msg.role == "toolResult" and any(block.type == "image" for block in msg.content):
+            return True
     return False
 
 

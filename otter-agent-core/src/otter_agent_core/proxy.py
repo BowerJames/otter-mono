@@ -49,7 +49,6 @@ from otter_ai.types import (
 from otter_ai.utils.event_stream import EventStream
 from otter_ai.utils.json_parse import parse_streaming_json
 
-
 # ============================================================================
 # ProxyMessageEventStream
 # ============================================================================
@@ -254,7 +253,8 @@ def _process_proxy_event(
 
         case "thinking_start":
             partial.content[proxy_event.content_index] = ThinkingContent(
-                type="thinking", thinking="",
+                type="thinking",
+                thinking="",
             )
             return AssistantMessageEventThinkingStart(
                 type="thinking_start",
@@ -600,9 +600,7 @@ def stream_proxy(
             except Exception as exc:
                 error_msg = exc.args[0] if exc.args else str(exc)
                 reason: Literal["aborted", "error"] = (
-                    "aborted"
-                    if abort_event is not None and abort_event.is_set()
-                    else "error"
+                    "aborted" if abort_event is not None and abort_event.is_set() else "error"
                 )
                 partial.stop_reason = reason
                 partial.error_message = error_msg

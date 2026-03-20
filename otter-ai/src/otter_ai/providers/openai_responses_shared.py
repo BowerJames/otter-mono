@@ -27,8 +27,8 @@ from otter_ai.utils.event_stream import AssistantMessageEventStream
 from otter_ai.utils.hash import short_hash
 from otter_ai.utils.json_parse import parse_streaming_json
 from otter_ai.utils.sanitize_unicode import sanitize_surrogates
-from .transform_messages import transform_messages
 
+from .transform_messages import transform_messages
 
 # =============================================================================
 # Text signature encoding/decoding
@@ -137,33 +137,43 @@ def convert_responses_messages(
     include_system = options.include_system_prompt if options else True
     if include_system and context.system_prompt:
         role = "developer" if model.reasoning else "system"
-        messages.append({
-            "role": role,
-            "content": sanitize_surrogates(context.system_prompt),
-        })
+        messages.append(
+            {
+                "role": role,
+                "content": sanitize_surrogates(context.system_prompt),
+            }
+        )
 
     msg_index = 0
     for msg in transformed_messages:
         if msg.role == "user":
             if isinstance(msg.content, str):
-                messages.append({
-                    "role": "user",
-                    "content": [{"type": "input_text", "text": sanitize_surrogates(msg.content)}],
-                })
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "input_text", "text": sanitize_surrogates(msg.content)}
+                        ],
+                    }
+                )
             else:
                 content: list[dict[str, Any]] = []
                 for item in msg.content:
                     if item.type == "text":
-                        content.append({
-                            "type": "input_text",
-                            "text": sanitize_surrogates(item.text),
-                        })
+                        content.append(
+                            {
+                                "type": "input_text",
+                                "text": sanitize_surrogates(item.text),
+                            }
+                        )
                     else:
-                        content.append({
-                            "type": "input_image",
-                            "detail": "auto",
-                            "image_url": f"data:{item.mime_type};base64,{item.data}",
-                        })
+                        content.append(
+                            {
+                                "type": "input_image",
+                                "detail": "auto",
+                                "image_url": f"data:{item.mime_type};base64,{item.data}",
+                            }
+                        )
                 if "image" not in (model.input or []):
                     content = [c for c in content if c.get("type") != "input_image"]
                 if not content:
@@ -173,9 +183,7 @@ def convert_responses_messages(
         elif msg.role == "assistant":
             output: list[dict[str, Any]] = []
             is_different_model = (
-                msg.model != model.id
-                and msg.provider == model.provider
-                and msg.api == model.api
+                msg.model != model.id and msg.provider == model.provider and msg.api == model.api
             )
 
             for block in msg.content:
@@ -186,9 +194,7 @@ def convert_responses_messages(
 
                 elif block.type == "text":
                     text_block = block
-                    parsed_sig = _parse_text_signature(
-                        getattr(text_block, "text_signature", None)
-                    )
+                    parsed_sig = _parse_text_signature(getattr(text_block, "text_signature", None))
                     msg_id = parsed_sig.get("id") if parsed_sig else None
                     if not msg_id:
                         msg_id = f"msg_{msg_index}"
@@ -198,11 +204,13 @@ def convert_responses_messages(
                     output_msg: dict[str, Any] = {
                         "type": "message",
                         "role": "assistant",
-                        "content": [{
-                            "type": "output_text",
-                            "text": sanitize_surrogates(text_block.text),
-                            "annotations": [],
-                        }],
+                        "content": [
+                            {
+                                "type": "output_text",
+                                "text": sanitize_surrogates(text_block.text),
+                                "annotations": [],
+                            }
+                        ],
                         "status": "completed",
                         "id": msg_id,
                     }
@@ -220,13 +228,15 @@ def convert_responses_messages(
                     if is_different_model and item_id and item_id.startswith("fc_"):
                         item_id = None
 
-                    output.append({
-                        "type": "function_call",
-                        "id": item_id,
-                        "call_id": call_id,
-                        "name": tool_call.name,
-                        "arguments": json.dumps(tool_call.arguments or {}),
-                    })
+                    output.append(
+                        {
+                            "type": "function_call",
+                            "id": item_id,
+                            "call_id": call_id,
+                            "name": tool_call.name,
+                            "arguments": json.dumps(tool_call.arguments or {}),
+                        }
+                    )
 
             if not output:
                 continue
@@ -242,26 +252,34 @@ def convert_responses_messages(
             if has_images and "image" in (model.input or []):
                 content_parts: list[dict[str, Any]] = []
                 if has_text:
-                    content_parts.append({
-                        "type": "input_text",
-                        "text": sanitize_surrogates(text_result),
-                    })
+                    content_parts.append(
+                        {
+                            "type": "input_text",
+                            "text": sanitize_surrogates(text_result),
+                        }
+                    )
                 for block in msg.content:
                     if block.type == "image":
-                        content_parts.append({
-                            "type": "input_image",
-                            "detail": "auto",
-                            "image_url": f"data:{block.mime_type};base64,{block.data}",
-                        })
+                        content_parts.append(
+                            {
+                                "type": "input_image",
+                                "detail": "auto",
+                                "image_url": f"data:{block.mime_type};base64,{block.data}",
+                            }
+                        )
                 output_val = content_parts
             else:
-                output_val = sanitize_surrogates(text_result if has_text else "(see attached image)")
+                output_val = sanitize_surrogates(
+                    text_result if has_text else "(see attached image)"
+                )
 
-            messages.append({
-                "type": "function_call_output",
-                "call_id": call_id,
-                "output": output_val,
-            })
+            messages.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": call_id,
+                    "output": output_val,
+                }
+            )
 
         msg_index += 1
 
@@ -363,18 +381,22 @@ async def process_responses_stream(
                 current_item = item
                 current_block = ThinkingContent(type="thinking", thinking="")
                 output.content.append(current_block)
-                stream.push(AssistantMessageEventThinkingStart(
-                    content_index=block_index(),
-                    partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventThinkingStart(
+                        content_index=block_index(),
+                        partial=output,
+                    )
+                )
             elif item.type == "message":
                 current_item = item
                 current_block = TextContent(type="text", text="")
                 output.content.append(current_block)
-                stream.push(AssistantMessageEventTextStart(
-                    content_index=block_index(),
-                    partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventTextStart(
+                        content_index=block_index(),
+                        partial=output,
+                    )
+                )
             elif item.type == "function_call":
                 current_item = item
                 current_block = ToolCall(
@@ -385,10 +407,12 @@ async def process_responses_stream(
                 )
                 current_block._partial_json = item.arguments or ""  # type: ignore[attr-defined]
                 output.content.append(current_block)
-                stream.push(AssistantMessageEventToolcallStart(
-                    content_index=block_index(),
-                    partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventToolcallStart(
+                        content_index=block_index(),
+                        partial=output,
+                    )
+                )
 
         elif event_type == "response.reasoning_summary_part.added":
             if current_item and current_item.type == "reasoning":
@@ -407,11 +431,13 @@ async def process_responses_stream(
                     last_part = summary[-1]
                     current_block.thinking += event.delta
                     last_part.text += event.delta
-                    stream.push(AssistantMessageEventThinkingDelta(
-                        content_index=block_index(),
-                        delta=event.delta,
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventThinkingDelta(
+                            content_index=block_index(),
+                            delta=event.delta,
+                            partial=output,
+                        )
+                    )
 
         elif event_type == "response.reasoning_summary_part.done":
             if (
@@ -424,11 +450,13 @@ async def process_responses_stream(
                     last_part = summary[-1]
                     current_block.thinking += "\n\n"
                     last_part.text += "\n\n"
-                    stream.push(AssistantMessageEventThinkingDelta(
-                        content_index=block_index(),
-                        delta="\n\n",
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventThinkingDelta(
+                            content_index=block_index(),
+                            delta="\n\n",
+                            partial=output,
+                        )
+                    )
 
         elif event_type == "response.content_part.added":
             if getattr(current_item, "type", None) == "message":
@@ -450,11 +478,13 @@ async def process_responses_stream(
                 if last_part and getattr(last_part, "type", None) == "output_text":
                     current_block.text += event.delta
                     last_part.text += event.delta
-                    stream.push(AssistantMessageEventTextDelta(
-                        content_index=block_index(),
-                        delta=event.delta,
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventTextDelta(
+                            content_index=block_index(),
+                            delta=event.delta,
+                            partial=output,
+                        )
+                    )
 
         elif event_type == "response.refusal.delta":
             if (
@@ -469,11 +499,13 @@ async def process_responses_stream(
                 if last_part and getattr(last_part, "type", None) == "refusal":
                     current_block.text += event.delta
                     last_part.refusal += event.delta
-                    stream.push(AssistantMessageEventTextDelta(
-                        content_index=block_index(),
-                        delta=event.delta,
-                        partial=output,
-                    ))
+                    stream.push(
+                        AssistantMessageEventTextDelta(
+                            content_index=block_index(),
+                            delta=event.delta,
+                            partial=output,
+                        )
+                    )
 
         elif event_type == "response.function_call_arguments.delta":
             if (
@@ -485,11 +517,13 @@ async def process_responses_stream(
                 partial += event.delta
                 current_block._partial_json = partial  # type: ignore[attr-defined]
                 current_block.arguments = parse_streaming_json(partial)
-                stream.push(AssistantMessageEventToolcallDelta(
-                    content_index=block_index(),
-                    delta=event.delta,
-                    partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventToolcallDelta(
+                        content_index=block_index(),
+                        delta=event.delta,
+                        partial=output,
+                    )
+                )
 
         elif event_type == "response.function_call_arguments.done":
             if (
@@ -510,16 +544,18 @@ async def process_responses_stream(
                 else:
                     current_block.thinking = ""
                 current_block.thinking_signature = json.dumps(item)
-                stream.push(AssistantMessageEventThinkingEnd(
-                    content_index=block_index(),
-                    content=current_block.thinking,
-                    partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventThinkingEnd(
+                        content_index=block_index(),
+                        content=current_block.thinking,
+                        partial=output,
+                    )
+                )
                 current_block = None
 
             elif item.type == "message" and current_block and current_block.type == "text":
                 texts = []
-                for c in (item.content or []):
+                for c in item.content or []:
                     if getattr(c, "type", None) == "output_text":
                         texts.append(c.text)
                     elif getattr(c, "type", None) == "refusal":
@@ -527,18 +563,25 @@ async def process_responses_stream(
                 current_block.text = "".join(texts)
                 phase = getattr(item, "phase", None)
                 current_block.text_signature = _encode_text_signature_v1(
-                    item.id, phase if phase else None,
+                    item.id,
+                    phase if phase else None,
                 )
-                stream.push(AssistantMessageEventTextEnd(
-                    content_index=block_index(),
-                    content=current_block.text,
-                    partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventTextEnd(
+                        content_index=block_index(),
+                        content=current_block.text,
+                        partial=output,
+                    )
+                )
                 current_block = None
 
             elif item.type == "function_call":
                 partial = getattr(current_block, "_partial_json", "") if current_block else ""
-                args = parse_streaming_json(partial) if partial else parse_streaming_json(item.arguments or "{}")
+                args = (
+                    parse_streaming_json(partial)
+                    if partial
+                    else parse_streaming_json(item.arguments or "{}")
+                )
                 tool_call = ToolCall(
                     type="toolCall",
                     id=f"{item.call_id}|{item.id}",
@@ -546,11 +589,13 @@ async def process_responses_stream(
                     arguments=args,
                 )
                 current_block = None
-                stream.push(AssistantMessageEventToolcallEnd(
-                    content_index=block_index(),
-                    tool_call=tool_call,
-                    partial=output,
-                ))
+                stream.push(
+                    AssistantMessageEventToolcallEnd(
+                        content_index=block_index(),
+                        tool_call=tool_call,
+                        partial=output,
+                    )
+                )
 
         elif event_type == "response.completed":
             response = event.response
@@ -558,9 +603,14 @@ async def process_responses_stream(
                 output.response_id = response.id
             if getattr(response, "usage", None):
                 usage = response.usage
-                cached_tokens = getattr(
-                    getattr(usage, "input_tokens_details", None), "cached_tokens", 0,
-                ) or 0
+                cached_tokens = (
+                    getattr(
+                        getattr(usage, "input_tokens_details", None),
+                        "cached_tokens",
+                        0,
+                    )
+                    or 0
+                )
                 output.usage = Usage(
                     input=(getattr(usage, "input_tokens", 0) or 0) - cached_tokens,
                     output=getattr(usage, "output_tokens", 0) or 0,
@@ -579,7 +629,10 @@ async def process_responses_stream(
                 output.stop_reason = "toolUse"
 
         elif event_type == "error":
-            raise RuntimeError(f"Error Code {getattr(event, 'code', 'unknown')}: {getattr(event, 'message', 'no message')}")
+            raise RuntimeError(
+                f"Error Code {getattr(event, 'code', 'unknown')}: "
+                f"{getattr(event, 'message', 'no message')}"
+            )
 
         elif event_type == "response.failed":
             error = getattr(getattr(event, "response", None), "error", None)

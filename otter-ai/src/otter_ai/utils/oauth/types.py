@@ -128,7 +128,9 @@ class OAuthProviderInterface(Protocol):
     def get_api_key(self, credentials: OAuthCredentials) -> str: ...
 
     def modify_models(
-        self, models: list[Model], credentials: OAuthCredentials,
+        self,
+        models: list[Model],
+        credentials: OAuthCredentials,
     ) -> list[Model]: ...
 
 

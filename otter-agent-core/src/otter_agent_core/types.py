@@ -202,9 +202,7 @@ class AgentLoopConfig(SimpleStreamOptions):
     # API key resolution
     # ------------------------------------------------------------------
 
-    get_api_key: (
-        Callable[[str], str | None | Awaitable[str | None]] | None
-    ) = None
+    get_api_key: Callable[[str], str | None | Awaitable[str | None]] | None = None
     """Resolve an API key dynamically for each LLM call.
 
     Useful for short-lived OAuth tokens (e.g., GitHub Copilot) that may
@@ -515,4 +513,3 @@ type AgentEvent = (
     | AgentEventToolExecutionUpdate
     | AgentEventToolExecutionEnd
 )
-

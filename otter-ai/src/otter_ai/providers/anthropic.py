@@ -7,7 +7,6 @@ Upstream: packages/ai/src/providers/anthropic.ts (~900 lines)
 
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -177,26 +176,28 @@ def _convert_content_blocks(
     """Convert content blocks to Anthropic API format."""
     has_images = any(c.type == "image" for c in content)
     if not has_images:
-        return sanitize_surrogates("".join(
-            (c.text if c.type == "text" else "") for c in content
-        ))
+        return sanitize_surrogates("".join((c.text if c.type == "text" else "") for c in content))
 
     blocks: list[dict[str, Any]] = []
     for block in content:
         if block.type == "text":
-            blocks.append({
-                "type": "text",
-                "text": sanitize_surrogates(block.text),
-            })
+            blocks.append(
+                {
+                    "type": "text",
+                    "text": sanitize_surrogates(block.text),
+                }
+            )
         elif block.type == "image":
-            blocks.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": block.mime_type,
-                    "data": block.data,
-                },
-            })
+            blocks.append(
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": block.mime_type,
+                        "data": block.data,
+                    },
+                }
+            )
 
     has_text = any(b["type"] == "text" for b in blocks)
     if not has_text:
@@ -269,9 +270,7 @@ def _create_client(
     Returns (client, is_oauth_token).
     """
     # Adaptive thinking models have interleaved thinking built-in.
-    needs_interleaved_beta = (
-        interleaved_thinking and not _supports_adaptive_thinking(model.id)
-    )
+    needs_interleaved_beta = interleaved_thinking and not _supports_adaptive_thinking(model.id)
 
     # Copilot: Bearer auth, selective betas
     if model.provider == "github-copilot":
@@ -287,11 +286,7 @@ def _create_client(
                 {
                     "accept": "application/json",
                     "anthropic-dangerous-direct-browser-access": "true",
-                    **(
-                        {"anthropic-beta": ",".join(beta_features)}
-                        if beta_features
-                        else {}
-                    ),
+                    **({"anthropic-beta": ",".join(beta_features)} if beta_features else {}),
                 },
                 model.headers,
                 dynamic_headers,
@@ -314,7 +309,9 @@ def _create_client(
                 {
                     "accept": "application/json",
                     "anthropic-dangerous-direct-browser-access": "true",
-                    "anthropic-beta": f"claude-code-20250219,oauth-2025-04-20,{','.join(beta_features)}",
+                    "anthropic-beta": (
+                        f"claude-code-20250219,oauth-2025-04-20,{','.join(beta_features)}"
+                    ),
                     "user-agent": f"claude-cli/{_CLAUDE_CODE_VERSION}",
                     "x-app": "cli",
                 },
@@ -349,6 +346,7 @@ def _create_client(
 def _normalize_tool_call_id(tool_call_id: str) -> str:
     """Normalize tool call IDs to match Anthropic's required pattern."""
     import re
+
     return re.sub(r"[^a-zA-Z0-9_-]", "_", tool_call_id)[:64]
 
 
@@ -374,27 +372,33 @@ def convert_messages(
         if msg.role == "user":
             if isinstance(msg.content, str):
                 if msg.content.strip():
-                    params.append({
-                        "role": "user",
-                        "content": sanitize_surrogates(msg.content),
-                    })
+                    params.append(
+                        {
+                            "role": "user",
+                            "content": sanitize_surrogates(msg.content),
+                        }
+                    )
             else:
                 blocks: list[dict[str, Any]] = []
                 for item in msg.content:
                     if item.type == "text":
-                        blocks.append({
-                            "type": "text",
-                            "text": sanitize_surrogates(item.text),
-                        })
+                        blocks.append(
+                            {
+                                "type": "text",
+                                "text": sanitize_surrogates(item.text),
+                            }
+                        )
                     elif item.type == "image":
-                        blocks.append({
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": item.mime_type,
-                                "data": item.data,
-                            },
-                        })
+                        blocks.append(
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": item.mime_type,
+                                    "data": item.data,
+                                },
+                            }
+                        )
 
                 # Filter images if model doesn't support them
                 if "image" not in (model.input or []):
@@ -402,7 +406,8 @@ def convert_messages(
 
                 # Filter empty text blocks
                 blocks = [
-                    b for b in blocks
+                    b
+                    for b in blocks
                     if not (b.get("type") == "text" and not b.get("text", "").strip())
                 ]
 
@@ -418,43 +423,51 @@ def convert_messages(
                 if block.type == "text":
                     if not block.text.strip():
                         continue
-                    blocks.append({
-                        "type": "text",
-                        "text": sanitize_surrogates(block.text),
-                    })
+                    blocks.append(
+                        {
+                            "type": "text",
+                            "text": sanitize_surrogates(block.text),
+                        }
+                    )
                 elif block.type == "thinking":
                     # Redacted thinking: pass the opaque payload back
                     if getattr(block, "redacted", False):
-                        blocks.append({
-                            "type": "redacted_thinking",
-                            "data": block.thinking_signature,
-                        })
+                        blocks.append(
+                            {
+                                "type": "redacted_thinking",
+                                "data": block.thinking_signature,
+                            }
+                        )
                         continue
                     if not block.thinking.strip():
                         continue
                     # If signature missing (aborted stream), convert to text
                     if not block.thinking_signature or not block.thinking_signature.strip():
-                        blocks.append({
-                            "type": "text",
-                            "text": sanitize_surrogates(block.thinking),
-                        })
+                        blocks.append(
+                            {
+                                "type": "text",
+                                "text": sanitize_surrogates(block.thinking),
+                            }
+                        )
                     else:
-                        blocks.append({
-                            "type": "thinking",
-                            "thinking": sanitize_surrogates(block.thinking),
-                            "signature": block.thinking_signature,
-                        })
+                        blocks.append(
+                            {
+                                "type": "thinking",
+                                "thinking": sanitize_surrogates(block.thinking),
+                                "signature": block.thinking_signature,
+                            }
+                        )
                 elif block.type == "toolCall":
-                    blocks.append({
-                        "type": "tool_use",
-                        "id": block.id,
-                        "name": (
-                            _to_claude_code_name(block.name)
-                            if is_oauth_token
-                            else block.name
-                        ),
-                        "input": block.arguments or {},
-                    })
+                    blocks.append(
+                        {
+                            "type": "tool_use",
+                            "id": block.id,
+                            "name": (
+                                _to_claude_code_name(block.name) if is_oauth_token else block.name
+                            ),
+                            "input": block.arguments or {},
+                        }
+                    )
 
             if not blocks:
                 i += 1
@@ -465,24 +478,28 @@ def convert_messages(
             # Collect all consecutive toolResult messages
             tool_results: list[dict[str, Any]] = []
 
-            tool_results.append({
-                "type": "tool_result",
-                "tool_use_id": msg.tool_call_id,
-                "content": _convert_content_blocks(msg.content),
-                "is_error": msg.is_error,
-            })
+            tool_results.append(
+                {
+                    "type": "tool_result",
+                    "tool_use_id": msg.tool_call_id,
+                    "content": _convert_content_blocks(msg.content),
+                    "is_error": msg.is_error,
+                }
+            )
 
             # Look ahead for consecutive toolResult messages
             j = i + 1
             while j < len(transformed_messages) and transformed_messages[j].role == "toolResult":
                 next_msg = transformed_messages[j]
                 assert isinstance(next_msg, ToolResultMessage)
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": next_msg.tool_call_id,
-                    "content": _convert_content_blocks(next_msg.content),
-                    "is_error": next_msg.is_error,
-                })
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": next_msg.tool_call_id,
+                        "content": _convert_content_blocks(next_msg.content),
+                        "is_error": next_msg.is_error,
+                    }
+                )
                 j += 1
 
             i = j - 1  # Will be incremented at end of loop
@@ -520,15 +537,17 @@ def _convert_tools(tools: list[Tool], is_oauth_token: bool) -> list[dict[str, An
     result: list[dict[str, Any]] = []
     for tool in tools:
         json_schema = tool.parameters if isinstance(tool.parameters, dict) else {}
-        result.append({
-            "name": _to_claude_code_name(tool.name) if is_oauth_token else tool.name,
-            "description": tool.description,
-            "input_schema": {
-                "type": "object",
-                "properties": json_schema.get("properties", {}),
-                "required": json_schema.get("required", []),
-            },
-        })
+        result.append(
+            {
+                "name": _to_claude_code_name(tool.name) if is_oauth_token else tool.name,
+                "description": tool.description,
+                "input_schema": {
+                    "type": "object",
+                    "properties": json_schema.get("properties", {}),
+                    "required": json_schema.get("required", []),
+                },
+            }
+        )
     return result
 
 
@@ -570,10 +589,12 @@ def _build_params(
 
     params: dict[str, Any] = {
         "model": model.id,
-        "messages": convert_messages(
-            context.messages, model, is_oauth_token, cache_control
+        "messages": convert_messages(context.messages, model, is_oauth_token, cache_control),
+        "max_tokens": (
+            options.max_tokens
+            if options and options.max_tokens is not None
+            else (model.max_tokens // 3)
         ),
-        "max_tokens": (options.max_tokens if options and options.max_tokens is not None else (model.max_tokens // 3)),
         "stream": True,
     }
 
@@ -587,11 +608,13 @@ def _build_params(
             },
         ]
         if context.system_prompt:
-            system_blocks.append({
-                "type": "text",
-                "text": sanitize_surrogates(context.system_prompt),
-                **({"cache_control": cache_control} if cache_control else {}),
-            })
+            system_blocks.append(
+                {
+                    "type": "text",
+                    "text": sanitize_surrogates(context.system_prompt),
+                    **({"cache_control": cache_control} if cache_control else {}),
+                }
+            )
         params["system"] = system_blocks
     elif context.system_prompt:
         params["system"] = [
@@ -675,9 +698,7 @@ def stream_anthropic(
                 is_oauth = False
             else:
                 api_key = (
-                    (options.api_key if options else None)
-                    or get_env_api_key(model.provider)
-                    or ""
+                    (options.api_key if options else None) or get_env_api_key(model.provider) or ""
                 )
 
                 copilot_dynamic_headers: dict[str, str] | None = None
@@ -706,9 +727,12 @@ def stream_anthropic(
 
             # Create streaming request
             import time
+
             output.timestamp = int(time.time() * 1000)
 
-            with client.messages.stream(params, signal=options.signal if options else None) as anthropic_stream:
+            with client.messages.stream(
+                params, signal=options.signal if options else None
+            ) as anthropic_stream:
                 stream.push(AssistantMessageEventStart(partial=output))
 
                 # Track content blocks with their Anthropic indices
@@ -722,8 +746,12 @@ def stream_anthropic(
                         output.response_id = event.message.id
                         output.usage.input = event.message.usage.input_tokens or 0
                         output.usage.output = event.message.usage.output_tokens or 0
-                        output.usage.cache_read = getattr(event.message.usage, "cache_read_input_tokens", 0) or 0
-                        output.usage.cache_write = getattr(event.message.usage, "cache_creation_input_tokens", 0) or 0
+                        output.usage.cache_read = (
+                            getattr(event.message.usage, "cache_read_input_tokens", 0) or 0
+                        )
+                        output.usage.cache_write = (
+                            getattr(event.message.usage, "cache_creation_input_tokens", 0) or 0
+                        )
                         output.usage.total_tokens = (
                             output.usage.input
                             + output.usage.output
@@ -737,33 +765,43 @@ def stream_anthropic(
                         if cb.type == "text":
                             block_indices[event.index] = len(output.content)
                             output.content.append(TextContent(type="text", text=""))
-                            stream.push(AssistantMessageEventTextStart(
-                                content_index=len(output.content) - 1,
-                                partial=output,
-                            ))
+                            stream.push(
+                                AssistantMessageEventTextStart(
+                                    content_index=len(output.content) - 1,
+                                    partial=output,
+                                )
+                            )
                         elif cb.type == "thinking":
                             block_indices[event.index] = len(output.content)
-                            output.content.append(ThinkingContent(
-                                type="thinking",
-                                thinking="",
-                                thinking_signature="",
-                            ))
-                            stream.push(AssistantMessageEventThinkingStart(
-                                content_index=len(output.content) - 1,
-                                partial=output,
-                            ))
+                            output.content.append(
+                                ThinkingContent(
+                                    type="thinking",
+                                    thinking="",
+                                    thinking_signature="",
+                                )
+                            )
+                            stream.push(
+                                AssistantMessageEventThinkingStart(
+                                    content_index=len(output.content) - 1,
+                                    partial=output,
+                                )
+                            )
                         elif cb.type == "redacted_thinking":
                             block_indices[event.index] = len(output.content)
-                            output.content.append(ThinkingContent(
-                                type="thinking",
-                                thinking="[Reasoning redacted]",
-                                thinking_signature=cb.data,
-                                redacted=True,
-                            ))
-                            stream.push(AssistantMessageEventThinkingStart(
-                                content_index=len(output.content) - 1,
-                                partial=output,
-                            ))
+                            output.content.append(
+                                ThinkingContent(
+                                    type="thinking",
+                                    thinking="[Reasoning redacted]",
+                                    thinking_signature=cb.data,
+                                    redacted=True,
+                                )
+                            )
+                            stream.push(
+                                AssistantMessageEventThinkingStart(
+                                    content_index=len(output.content) - 1,
+                                    partial=output,
+                                )
+                            )
                         elif cb.type == "tool_use":
                             block_indices[event.index] = len(output.content)
                             tool_name = (
@@ -771,17 +809,22 @@ def stream_anthropic(
                                 if is_oauth
                                 else cb.name
                             )
-                            output.content.append(ToolCall(
-                                type="toolCall",
-                                id=cb.id,
-                                name=tool_name,
-                                arguments=(cb.input if isinstance(cb.input, dict) else {}) or {},
-                            ))
+                            output.content.append(
+                                ToolCall(
+                                    type="toolCall",
+                                    id=cb.id,
+                                    name=tool_name,
+                                    arguments=(cb.input if isinstance(cb.input, dict) else {})
+                                    or {},
+                                )
+                            )
                             partial_jsons[event.index] = ""
-                            stream.push(AssistantMessageEventToolcallStart(
-                                content_index=len(output.content) - 1,
-                                partial=output,
-                            ))
+                            stream.push(
+                                AssistantMessageEventToolcallStart(
+                                    content_index=len(output.content) - 1,
+                                    partial=output,
+                                )
+                            )
 
                     elif event_type == "content_block_delta":
                         delta = event.delta
@@ -791,34 +834,42 @@ def stream_anthropic(
                                 block = output.content[idx]
                                 if isinstance(block, TextContent):
                                     block.text += delta.text
-                                    stream.push(AssistantMessageEventTextDelta(
-                                        content_index=idx,
-                                        delta=delta.text,
-                                        partial=output,
-                                    ))
+                                    stream.push(
+                                        AssistantMessageEventTextDelta(
+                                            content_index=idx,
+                                            delta=delta.text,
+                                            partial=output,
+                                        )
+                                    )
                         elif delta.type == "thinking_delta":
                             idx = block_indices.get(event.index)
                             if idx is not None:
                                 block = output.content[idx]
                                 if isinstance(block, ThinkingContent):
                                     block.thinking += delta.thinking
-                                    stream.push(AssistantMessageEventThinkingDelta(
-                                        content_index=idx,
-                                        delta=delta.thinking,
-                                        partial=output,
-                                    ))
+                                    stream.push(
+                                        AssistantMessageEventThinkingDelta(
+                                            content_index=idx,
+                                            delta=delta.thinking,
+                                            partial=output,
+                                        )
+                                    )
                         elif delta.type == "input_json_delta":
                             idx = block_indices.get(event.index)
                             if idx is not None:
                                 block = output.content[idx]
                                 if block.type == "toolCall":
                                     partial_jsons[event.index] += delta.partial_json
-                                    block.arguments = parse_streaming_json(partial_jsons[event.index]) or {}
-                                    stream.push(AssistantMessageEventToolcallDelta(
-                                        content_index=idx,
-                                        delta=delta.partial_json,
-                                        partial=output,
-                                    ))
+                                    block.arguments = (
+                                        parse_streaming_json(partial_jsons[event.index]) or {}
+                                    )
+                                    stream.push(
+                                        AssistantMessageEventToolcallDelta(
+                                            content_index=idx,
+                                            delta=delta.partial_json,
+                                            partial=output,
+                                        )
+                                    )
                         elif delta.type == "signature_delta":
                             idx = block_indices.get(event.index)
                             if idx is not None:
@@ -833,24 +884,32 @@ def stream_anthropic(
                         if idx is not None:
                             block = output.content[idx]
                             if isinstance(block, TextContent):
-                                stream.push(AssistantMessageEventTextEnd(
-                                    content_index=idx,
-                                    content=block.text,
-                                    partial=output,
-                                ))
+                                stream.push(
+                                    AssistantMessageEventTextEnd(
+                                        content_index=idx,
+                                        content=block.text,
+                                        partial=output,
+                                    )
+                                )
                             elif isinstance(block, ThinkingContent):
-                                stream.push(AssistantMessageEventThinkingEnd(
-                                    content_index=idx,
-                                    content=block.thinking,
-                                    partial=output,
-                                ))
+                                stream.push(
+                                    AssistantMessageEventThinkingEnd(
+                                        content_index=idx,
+                                        content=block.thinking,
+                                        partial=output,
+                                    )
+                                )
                             elif block.type == "toolCall":
-                                block.arguments = parse_streaming_json(partial_jsons.get(event.index, "")) or {}
-                                stream.push(AssistantMessageEventToolcallEnd(
-                                    content_index=idx,
-                                    tool_call=block,
-                                    partial=output,
-                                ))
+                                block.arguments = (
+                                    parse_streaming_json(partial_jsons.get(event.index, "")) or {}
+                                )
+                                stream.push(
+                                    AssistantMessageEventToolcallEnd(
+                                        content_index=idx,
+                                        tool_call=block,
+                                        partial=output,
+                                    )
+                                )
 
                     elif event_type == "message_delta":
                         if event.delta.stop_reason:
@@ -886,15 +945,14 @@ def stream_anthropic(
 
         except Exception as error:
             output.stop_reason = (
-                "aborted"
-                if (options and options.signal and options.signal.is_set())
-                else "error"
+                "aborted" if (options and options.signal and options.signal.is_set()) else "error"
             )
-            output.error_message = error.message if isinstance(error, Exception) else json.dumps(error)  # type: ignore[union-attr]
+            output.error_message = error.args[0] if error.args else str(error)
             stream.push(AssistantMessageEventError(reason=output.stop_reason, error=output))
             stream.end()
 
     import asyncio
+
     asyncio.create_task(_run())
     return stream
 
@@ -915,31 +973,39 @@ def stream_simple_anthropic(
     base = build_base_options(model, options, api_key)
 
     if not (options and options.reasoning):
-        return stream_anthropic(model, context, AnthropicOptions(
-            api_key=base.api_key,
-            max_tokens=base.max_tokens,
-            temperature=base.temperature,
-            signal=base.signal,
-            headers=base.headers,
-            on_payload=base.on_payload,
-            metadata=base.metadata,
-            thinking_enabled=False,
-        ))
+        return stream_anthropic(
+            model,
+            context,
+            AnthropicOptions(
+                api_key=base.api_key,
+                max_tokens=base.max_tokens,
+                temperature=base.temperature,
+                signal=base.signal,
+                headers=base.headers,
+                on_payload=base.on_payload,
+                metadata=base.metadata,
+                thinking_enabled=False,
+            ),
+        )
 
     # Adaptive thinking for Opus 4.6 / Sonnet 4.6
     if _supports_adaptive_thinking(model.id):
         effort = _map_thinking_level_to_effort(options.reasoning, model.id)
-        return stream_anthropic(model, context, AnthropicOptions(
-            api_key=base.api_key,
-            max_tokens=base.max_tokens,
-            temperature=base.temperature,
-            signal=base.signal,
-            headers=base.headers,
-            on_payload=base.on_payload,
-            metadata=base.metadata,
-            thinking_enabled=True,
-            effort=effort,
-        ))
+        return stream_anthropic(
+            model,
+            context,
+            AnthropicOptions(
+                api_key=base.api_key,
+                max_tokens=base.max_tokens,
+                temperature=base.temperature,
+                signal=base.signal,
+                headers=base.headers,
+                on_payload=base.on_payload,
+                metadata=base.metadata,
+                thinking_enabled=True,
+                effort=effort,
+            ),
+        )
 
     # Budget-based thinking for older models
     adjusted = adjust_max_tokens_for_thinking(
@@ -948,14 +1014,18 @@ def stream_simple_anthropic(
         options.reasoning,
         options.thinking_budgets,
     )
-    return stream_anthropic(model, context, AnthropicOptions(
-        api_key=base.api_key,
-        max_tokens=adjusted[0],
-        temperature=base.temperature,
-        signal=base.signal,
-        headers=base.headers,
-        on_payload=base.on_payload,
-        metadata=base.metadata,
-        thinking_enabled=True,
-        thinking_budget_tokens=adjusted[1],
-    ))
+    return stream_anthropic(
+        model,
+        context,
+        AnthropicOptions(
+            api_key=base.api_key,
+            max_tokens=adjusted[0],
+            temperature=base.temperature,
+            signal=base.signal,
+            headers=base.headers,
+            on_payload=base.on_payload,
+            metadata=base.metadata,
+            thinking_enabled=True,
+            thinking_budget_tokens=adjusted[1],
+        ),
+    )

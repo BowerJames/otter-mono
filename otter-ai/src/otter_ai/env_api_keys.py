@@ -38,10 +38,7 @@ def _has_vertex_adc_credentials() -> bool:
     else:
         # Fall back to default ADC path
         _cached_vertex_adc_exists = (
-            Path.home()
-            / ".config"
-            / "gcloud"
-            / "application_default_credentials.json"
+            Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
         ).exists()
 
     return _cached_vertex_adc_exists
@@ -120,10 +117,7 @@ def get_env_api_key(provider: str) -> str | None:
     if provider == "amazon-bedrock":
         if (
             os.environ.get("AWS_PROFILE")
-            or (
-                os.environ.get("AWS_ACCESS_KEY_ID")
-                and os.environ.get("AWS_SECRET_ACCESS_KEY")
-            )
+            or (os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get("AWS_SECRET_ACCESS_KEY"))
             or os.environ.get("AWS_BEARER_TOKEN_BEDROCK")
             or os.environ.get("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
             or os.environ.get("AWS_CONTAINER_CREDENTIALS_FULL_URI")

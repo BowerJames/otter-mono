@@ -24,6 +24,7 @@ venv = ".venv"
 ignore = [
     "otter-ai/src/otter_ai/__init__.py",
     "otter-ai/src/otter_ai/oauth.py",
+    "otter-ai/src/otter_ai/stream.py",
     "otter-ai/src/otter_ai/utils/oauth/__init__.py",
     "otter-agent-core/src/otter_agent_core/__init__.py",
 ]
@@ -45,4 +46,5 @@ known-first-party = ["otter_ai", "otter_agent_core"]
 
 [tool.ruff.lint.per-file-ignores]
 "*/__init__.py" = ["I001"]
+"otter-ai/src/otter_ai/utils/oauth/oauth_page.py" = ["E501"]
 
