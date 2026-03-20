@@ -150,6 +150,18 @@ from .models import (  # noqa: F401
     supports_xhigh,
 )
 
+# OAuth types (upstream: export type { ... } from "./utils/oauth/types.js")
+from .utils.oauth.types import (  # noqa: F401
+    OAuthAuthInfo,
+    OAuthCredentials,
+    OAuthLoginCallbacks,
+    OAuthPrompt,
+    OAuthProvider,
+    OAuthProviderId,
+    OAuthProviderInfo,
+    OAuthProviderInterface,
+)
+
 # ---------------------------------------------------------------------------
 # Provider Options classes
 #
