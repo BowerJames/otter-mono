@@ -36,3 +36,6 @@ from .agent_loop import (  # noqa: F401
     run_agent_loop,
     run_agent_loop_continue,
 )
+
+# Agent class
+from .agent import Agent, AgentOptions  # noqa: F401
