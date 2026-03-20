@@ -23,6 +23,7 @@ venvPath = "."
 venv = ".venv"
 ignore = [
     "otter-ai/src/otter_ai/__init__.py",
+    "otter-agent-core/src/otter_agent_core/__init__.py",
 ]
 reportUnusedImport = "warning"
 
