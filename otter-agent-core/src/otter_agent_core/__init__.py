@@ -39,3 +39,11 @@ from .agent_loop import (  # noqa: F401
 
 # Agent class
 from .agent import Agent, AgentOptions  # noqa: F401
+
+# Proxy utilities
+from .proxy import (  # noqa: F401
+    ProxyAssistantMessageEvent,
+    ProxyMessageEventStream,
+    ProxyStreamOptions,
+    stream_proxy,
+)
