@@ -13,7 +13,9 @@ Upstream reference: ``packages/agent/src/proxy.ts``
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -35,16 +37,12 @@ from otter_ai.types import (
     AssistantMessageEventToolcallDelta,
     AssistantMessageEventToolcallEnd,
     AssistantMessageEventToolcallStart,
-    Content,
     Context,
-    Message,
     Model,
     SimpleStreamOptions,
     TextContent,
     ThinkingContent,
-    Tool,
     ToolCall,
-    ToolResultContent,
     Usage,
     UsageCost,
 )
@@ -535,33 +533,13 @@ def stream_proxy(
 
         async with httpx.AsyncClient() as client:
             try:
-                # Build the request body (camelCase to match upstream wire format).
+                # Build the request body.
+                # Upstream does ``JSON.stringify({ model, context, options })``
+                # which naturally produces camelCase.  Python dataclasses use
+                # snake_case, so we recursively convert via ``_to_camel_dict``.
                 body: dict[str, Any] = {
-                    "model": {
-                        "id": model.id,
-                        "name": model.name,
-                        "api": model.api,
-                        "provider": model.provider,
-                        "baseUrl": model.base_url,
-                        "reasoning": model.reasoning,
-                        "input": model.input,
-                        "cost": {
-                            "input": model.cost.input,
-                            "output": model.cost.output,
-                            "cacheRead": model.cost.cache_read,
-                            "cacheWrite": model.cost.cache_write,
-                        },
-                        "contextWindow": model.context_window,
-                        "maxTokens": model.max_tokens,
-                    },
-                    "context": {
-                        "systemPrompt": context.system_prompt,
-                        "messages": _serialize_messages(context.messages),
-                        "tools": _serialize_tools(context.tools),
-                    } if context.tools is not None else {
-                        "systemPrompt": context.system_prompt,
-                        "messages": _serialize_messages(context.messages),
-                    },
+                    "model": _to_camel_dict(model),
+                    "context": _to_camel_dict(context),
                     "options": {
                         "temperature": options.temperature,
                         "maxTokens": options.max_tokens,
@@ -642,125 +620,42 @@ def stream_proxy(
 
 
 # ============================================================================
-# Message / Tool serialization helpers
+# Serialization helper
 #
-# These convert otter-ai Python dataclasses to the camelCase JSON format
-# expected by the upstream proxy server wire protocol.
+# Upstream does JSON.stringify({ model, context, options }) which
+# naturally produces camelCase keys.  Python dataclasses use snake_case
+# field names, so we recursively convert dataclasses.asdict() output.
 # ============================================================================
 
 
-def _serialize_messages(messages: list[Message]) -> list[dict[str, Any]]:
-    """Serialize messages to the upstream camelCase JSON format."""
-    result: list[dict[str, Any]] = []
-    for msg in messages:
-        match msg.role:
-            case "user":
-                result.append({
-                    "role": "user",
-                    "content": msg.content,
-                    "timestamp": msg.timestamp,
-                })
-            case "assistant":
-                content = _serialize_assistant_content(msg.content)
-                entry: dict[str, Any] = {
-                    "role": "assistant",
-                    "content": content,
-                    "api": msg.api,
-                    "provider": msg.provider,
-                    "model": msg.model,
-                    "usage": _serialize_usage(msg.usage),
-                    "stopReason": msg.stop_reason,
-                    "timestamp": msg.timestamp,
-                }
-                if msg.response_id is not None:
-                    entry["responseId"] = msg.response_id
-                if msg.error_message is not None:
-                    entry["errorMessage"] = msg.error_message
-                result.append(entry)
-            case "toolResult":
-                entry = {
-                    "role": "toolResult",
-                    "toolCallId": msg.tool_call_id,
-                    "toolName": msg.tool_name,
-                    "content": _serialize_tool_result_content(msg.content),
-                    "isError": msg.is_error,
-                    "timestamp": msg.timestamp,
-                }
-                if msg.details is not None:
-                    entry["details"] = msg.details
-                result.append(entry)
-    return result
+_CAMEL_RE = re.compile(r"_([a-z])")
 
 
-def _serialize_assistant_content(content: list[Content]) -> list[dict[str, Any]]:
-    """Serialize assistant message content blocks to camelCase."""
-    result: list[dict[str, Any]] = []
-    for block in content:
-        match block.type:
-            case "text":
-                entry: dict[str, Any] = {"type": "text", "text": block.text}
-                if block.text_signature is not None:
-                    entry["textSignature"] = block.text_signature
-                result.append(entry)
-            case "thinking":
-                entry = {"type": "thinking", "thinking": block.thinking}
-                if block.thinking_signature is not None:
-                    entry["thinkingSignature"] = block.thinking_signature
-                if block.redacted is not None:
-                    entry["redacted"] = block.redacted
-                result.append(entry)
-            case "toolCall":
-                entry = {
-                    "type": "toolCall",
-                    "id": block.id,
-                    "name": block.name,
-                    "arguments": block.arguments,
-                }
-                if block.thought_signature is not None:
-                    entry["thoughtSignature"] = block.thought_signature
-                result.append(entry)
-    return result
+def _snake_to_camel(name: str) -> str:
+    """Convert a snake_case string to camelCase."""
+    return _CAMEL_RE.sub(lambda m: m.group(1).upper(), name)
 
 
-def _serialize_tool_result_content(content: list[ToolResultContent]) -> list[dict[str, Any]]:
-    """Serialize tool result content blocks to camelCase."""
-    result: list[dict[str, Any]] = []
-    for block in content:
-        match block.type:
-            case "text":
-                result.append({"type": "text", "text": block.text})
-            case "image":
-                result.append({"type": "image", "data": block.data, "mimeType": block.mime_type})
-    return result
+def _to_camel_dict(obj: Any) -> Any:
+    """Recursively convert a dataclass to a camelCase dict.
 
-
-def _serialize_tools(tools: list[Tool] | None) -> list[dict[str, Any]] | None:
-    """Serialize tool definitions to the upstream JSON format."""
-    if tools is None:
-        return None
-    result: list[dict[str, Any]] = []
-    for tool in tools:
-        result.append({
-            "name": tool.name,
-            "description": tool.description,
-            "parameters": tool.parameters.model_json_schema(),
-        })
-    return result
-
-
-def _serialize_usage(usage: Usage) -> dict[str, Any]:
-    """Serialize a :class:`Usage` to the upstream camelCase JSON format."""
-    return {
-        "input": usage.input,
-        "output": usage.output,
-        "cacheRead": usage.cache_read,
-        "cacheWrite": usage.cache_write,
-        "totalTokens": usage.total_tokens,
-        "cost": {
-            "input": usage.cost.input,
-            "output": usage.cost.output,
-            "cacheRead": usage.cost.cache_read,
-            "cacheWrite": usage.cost.cache_write,
-            "total": usage.cost.total,
-        },
-    }
+    Handles nested dataclasses, lists, dicts, and primitives.
+    Omits None values (matching upstream JSON.stringify behavior
+    which drops undefined fields).
+    """
+    if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+        result: dict[str, Any] = {}
+        for f in dataclasses.fields(obj):
+            value: Any = getattr(obj, f.name)
+            if value is None:
+                continue
+            result[_snake_to_camel(f.name)] = _to_camel_dict(value)
+        return result
+    if isinstance(obj, list):
+        return [_to_camel_dict(i) for i in obj]  # type: ignore[unknownVariableType]
+    if isinstance(obj, dict):
+        out: dict[str, Any] = {}
+        for k, v in obj.items():  # type: ignore[unknownVariableType]
+            out[str(k)] = _to_camel_dict(v)  # type: ignore[unknownArgumentType]
+        return out
+    return obj
