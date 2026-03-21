@@ -8,9 +8,9 @@ from __future__ import annotations
 from typing import Any
 
 from otter_ai.models import get_model
+from otter_ai import EventStream
 from otter_ai.types import (
     AssistantMessage,
-    EventStream,
     Usage,
     UsageCost,
 )
