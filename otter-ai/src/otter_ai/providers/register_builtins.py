@@ -110,7 +110,7 @@ def _create_lazy_stream(
                 )
                 outer.end(msg)
 
-        asyncio.get_event_loop().create_task(_run())
+        asyncio.ensure_future(_run())
         return outer
 
     return lazy_stream
@@ -145,7 +145,7 @@ _bedrock_module_override: Any = None
 def _load_provider_module(provider_name: str) -> Any:
     """Return the (possibly cached) provider module for *provider_name*.
 
-    Uses ``asyncio.get_event_loop().create_task`` to ensure the import
+    Uses ``asyncio.ensure_future`` to ensure the import
     happens only once, with subsequent calls awaiting the same task.
     """
     task = _load_promises.get(provider_name)
@@ -156,7 +156,7 @@ def _load_provider_module(provider_name: str) -> Any:
         module_path = f"otter_ai.providers.{provider_name}"
         return importlib.import_module(module_path)
 
-    new_task = asyncio.get_event_loop().create_task(_do_import())
+    new_task = asyncio.ensure_future(_do_import())
     _load_promises[provider_name] = new_task
     return new_task
 
@@ -259,11 +259,11 @@ def _load_bedrock_module() -> Any:
     return _load_provider_module("amazon_bedrock")
 
 
-stream_bedrock = _create_lazy_stream(
+_stream_bedrock = _create_lazy_stream(
     _load_bedrock_module,
     "stream_bedrock",
 )
-stream_simple_bedrock = _create_lazy_stream(
+_stream_simple_bedrock = _create_lazy_stream(
     _load_bedrock_module,
     "stream_simple_bedrock",
 )
@@ -357,8 +357,8 @@ def register_builtin_api_providers() -> None:
     register_api_provider(
         ApiProvider(
             api="bedrock-converse-stream",
-            stream=stream_bedrock,
-            stream_simple=stream_simple_bedrock,
+            stream=_stream_bedrock,
+            stream_simple=_stream_simple_bedrock,
         ),
     )
 

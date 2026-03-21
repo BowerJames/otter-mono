@@ -613,7 +613,7 @@ def stream_proxy(
                 )
                 stream.end()
 
-    asyncio.get_event_loop().create_task(_run())
+    asyncio.ensure_future(_run())
     return stream
 
 

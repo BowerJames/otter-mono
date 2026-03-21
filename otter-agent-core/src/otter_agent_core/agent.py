@@ -31,6 +31,8 @@ from otter_ai.types import (
 
 from .agent_loop import agent_loop, agent_loop_continue
 from .types import (
+    AfterToolCallContext,
+    AfterToolCallResult,
     AgentContext,
     AgentEvent,
     AgentEventEnd,
@@ -38,6 +40,8 @@ from .types import (
     AgentMessage,
     AgentState,
     AgentTool,
+    BeforeToolCallContext,
+    BeforeToolCallResult,
     StreamFn,
     ToolExecutionMode,
 )
@@ -68,24 +72,49 @@ def _default_convert_to_llm(messages: list[AgentMessage]) -> list[Message]:
 class AgentOptions:
     """Configuration options for constructing an :class:`Agent`.
 
-    Mirrors the upstream ``AgentOptions`` interface.
+    Mirrors the upstream ``AgentOptions`` interface with properly typed
+    callable fields matching :class:`AgentLoopConfig`.
+
+    The ``signal`` parameter in callback signatures is typed as ``Any``
+    (representing ``asyncio.Event | None``), matching the upstream's
+    ``AbortSignal`` pattern.
     """
 
     initial_state: dict[str, Any] | None = None
-    convert_to_llm: Any = None
-    transform_context: Any = None
+    convert_to_llm: (
+        Callable[[list[AgentMessage]], list[Message] | Awaitable[list[Message]]] | None
+    ) = None
+    transform_context: (
+        Callable[
+            [list[AgentMessage], Any],
+            list[AgentMessage] | Awaitable[list[AgentMessage]],
+        ]
+        | None
+    ) = None
     steering_mode: Literal["all", "one-at-a-time"] | None = None
     follow_up_mode: Literal["all", "one-at-a-time"] | None = None
     stream_fn: StreamFn | None = None
     session_id: str | None = None
-    get_api_key: Any = None
+    get_api_key: Callable[[str], str | None | Awaitable[str | None]] | None = None
     on_payload: Any = None
     thinking_budgets: ThinkingBudgets | None = None
     transport: Transport | None = None
     max_retry_delay_ms: int | None = None
     tool_execution: ToolExecutionMode | None = None
-    before_tool_call: Any = None
-    after_tool_call: Any = None
+    before_tool_call: (
+        Callable[
+            [BeforeToolCallContext, Any],
+            BeforeToolCallResult | None | Awaitable[BeforeToolCallResult | None],
+        ]
+        | None
+    ) = None
+    after_tool_call: (
+        Callable[
+            [AfterToolCallContext, Any],
+            AfterToolCallResult | None | Awaitable[AfterToolCallResult | None],
+        ]
+        | None
+    ) = None
 
 
 # ============================================================================

@@ -1,6 +1,14 @@
 """otter-ai: Unified multi-provider LLM API."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 __version__ = "0.1.0"
+
+# Schema/TypeBox equivalent (upstream: export type { Static, TSchema } from "@sinclair/typebox")
+# Per DECISIONS.md §1, pydantic BaseModel replaces TypeBox's TSchema for tool parameter schemas.
+from pydantic import BaseModel  # noqa: F401
 
 # Core types
 from .types import (  # noqa: F401
@@ -39,6 +47,7 @@ from .types import (  # noqa: F401
     StreamFunction,
     StreamOptions,
     TextContent,
+    TextSignatureV1,
     ThinkingBudgets,
     ThinkingContent,
     ThinkingLevel,
@@ -92,7 +101,6 @@ from .providers.register_builtins import (  # noqa: F401
     set_bedrock_provider_module,
     stream_anthropic,
     stream_azure_openai_responses,
-    stream_bedrock,
     stream_google,
     stream_google_gemini_cli,
     stream_google_vertex,
@@ -102,7 +110,6 @@ from .providers.register_builtins import (  # noqa: F401
     stream_openai_responses,
     stream_simple_anthropic,
     stream_simple_azure_openai_responses,
-    stream_simple_bedrock,
     stream_simple_google,
     stream_simple_google_gemini_cli,
     stream_simple_google_vertex,
@@ -170,19 +177,21 @@ from .utils.oauth.types import (  # noqa: F401
 # equivalent of type-only exports, so importing an Options class from a
 # provider module would eagerly load that provider's SDK.
 #
-# For provider-specific typed options, import directly from the provider module:
+# Provider Options are only available under ``TYPE_CHECKING`` for use in type
+# annotations.  For runtime access, import directly from the provider module:
 #   from otter_ai.providers.anthropic import AnthropicOptions
-#   etc.
 #
-# Still missing (blocked on #13):
-#   GoogleGeminiCliOptions   — google-gemini-cli provider not yet implemented
-#   OpenAICodexResponsesOptions — openai-codex-responses provider not yet implemented
+# Still missing (blocked on #13, #42, #57, #60, #61):
+#   GoogleGeminiCliOptions   — google-gemini-cli provider not yet implemented (#60)
+#   OpenAICodexResponsesOptions — openai-codex-responses provider not yet implemented (#61)
 #   BedrockOptions           — amazon-bedrock provider not yet implemented (#42)
+#   BedrockProviderModule    — bedrock-provider barrel not yet implemented (#57)
 # ---------------------------------------------------------------------------
-from .providers.anthropic import AnthropicOptions  # noqa: F401
-from .providers.azure_openai_responses import AzureOpenAIResponsesOptions  # noqa: F401
-from .providers.google import GoogleOptions  # noqa: F401
-from .providers.google_vertex import GoogleVertexOptions  # noqa: F401
-from .providers.mistral import MistralOptions  # noqa: F401
-from .providers.openai_completions import OpenAICompletionsOptions  # noqa: F401
-from .providers.openai_responses import OpenAIResponsesOptions  # noqa: F401
+if TYPE_CHECKING:
+    from .providers.anthropic import AnthropicOptions  # noqa: F401
+    from .providers.azure_openai_responses import AzureOpenAIResponsesOptions  # noqa: F401
+    from .providers.google import GoogleOptions  # noqa: F401
+    from .providers.google_vertex import GoogleVertexOptions  # noqa: F401
+    from .providers.mistral import MistralOptions  # noqa: F401
+    from .providers.openai_completions import OpenAICompletionsOptions  # noqa: F401
+    from .providers.openai_responses import OpenAIResponsesOptions  # noqa: F401

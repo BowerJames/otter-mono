@@ -142,7 +142,7 @@ def agent_loop(
         )
         stream.end(messages)
 
-    asyncio.get_event_loop().create_task(_run())
+    asyncio.ensure_future(_run())
     return stream
 
 
@@ -180,7 +180,7 @@ def agent_loop_continue(
         )
         stream.end(messages)
 
-    asyncio.get_event_loop().create_task(_run())
+    asyncio.ensure_future(_run())
     return stream
 
 

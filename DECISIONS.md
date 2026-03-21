@@ -254,4 +254,190 @@ This document captures deliberate deviations from the upstream [pi-mono](https:/
 **Impact:**
 - Cannot generate new model data independently — requires the upstream `models.generated.ts` to exist first.
 - The regex-based TS parser may need updates if the upstream output format changes significantly.
+
+---
+
+## 12. Proxy Serialization/Parsing Helpers
+
+**Upstream:** `proxy.ts` (~340 lines) uses inline structural types for proxy events and relies on `JSON.parse()` with TypeScript type assertions for deserialization. The `ToolCall` `partialJson` field is stored via `(content as any).partialJson`.
+
+**Decision:** `proxy.py` (~659 lines) uses named `@dataclass` classes for proxy events (`ProxyEventStart`, `ProxyEventTextDelta`, etc.), explicit `_parse_proxy_event()` deserialization, and `_parse_usage()`/`_parse_usage_cost()` helpers. The `partialJson` field is stored via `tc._partial_json` (type-ignored attribute).
+
+**Rationale:**
+- Named dataclasses provide better IDE autocompletion and type safety compared to inline structural types.
+- Explicit deserialization (`_parse_proxy_event`) handles camelCase→snake_case mapping that the upstream gets for free via `JSON.parse` + TypeScript.
+- `_to_camel_dict()` serialization helper converts Python snake_case dataclasses back to camelCase for the wire format, which upstream's `JSON.stringify` does automatically.
+
+**Impact:**
+- `proxy.py` is ~95% larger than upstream due to explicit (de)serialization code.
+- `ProxyAssistantMessageEvent` is a typed union of named dataclasses (exported from `__init__.py`), whereas upstream uses an anonymous union type.
+- `ProxyMessageEventStream` is exported from `__init__.py` matching upstream's `export * from "./proxy.js"`.
+
+---
+
+## 13. Agent.continue_run Keyword Rename
+
+**Upstream:** `Agent.continue()` is a method on the `Agent` class.
+
+**Decision:** Renamed to `Agent.continue_run()`.
+
+**Rationale:**
+- `continue` is a Python reserved keyword and cannot be used as a method name.
+
+**Impact:**
+- Code porting from upstream TypeScript examples must rename `agent.continue()` → `agent.continue_run()`.
+- The deviation is small, necessary, and self-explanatory.
+
+---
+
+## 14. AgentOptions CamelCase→snake_case Mapping for initial_state
+
+**Upstream:** `Agent` constructor spreads `opts.initialState` directly onto the default state object:
+
+```typescript
+this._state = { ...this._state, ...opts.initialState };
+```
+
+Keys in `initialState` are expected to be camelCase matching `AgentState` interface fields.
+
+**Decision:** `Agent.__init__` applies `_camel_to_snake()` to each key in `initial_state` before setting it on the `AgentState` dataclass.
+
+**Rationale:**
+- Python dataclasses use snake_case field names (`system_prompt`, `thinking_level`).
+- Users may pass camelCase keys when porting from upstream TypeScript or reading upstream docs.
+- The conversion is cached and only runs once during construction.
+
+**Impact:**
+- Users can pass either camelCase or snake_case keys in `initial_state`.
+- The mapping is a best-effort heuristic; unusual camelCase patterns may not convert correctly.
+
+---
+
+## 15. register_builtins.py Lazy-Loading Architecture
+
+**Upstream:** `register-builtins.ts` defines a typed `LazyProviderModule<TApi, TOptions, TSimpleOptions>` interface that normalizes all provider modules to a consistent shape with `stream` and `streamSimple` methods. Each `load*ProviderModule()` function dynamically imports the provider module and maps provider-specific function names to the normalized interface (e.g., `streamAnthropic` → `stream`). Separate `createLazyStream` and `createLazySimpleStream` factories create the lazy wrapper functions.
+
+**Decision:** `register_builtins.py` uses a single `_create_lazy_stream()` factory that takes a `load_module` callable and a `stream_attr` string attribute name. No normalized interface type is used; each lazy stream function directly references the provider-specific attribute name (e.g., `"stream_anthropic"`).
+
+**Rationale:**
+- Python's dynamic typing makes the normalized interface unnecessary — `_create_lazy_stream` just calls `getattr(mod, stream_attr)` on the loaded module.
+- The upstream needs the interface because TypeScript requires explicit type annotations for the `loadModule()` return type.
+- `importlib.import_module()` is the direct equivalent of JavaScript's `import()`.
+
+**Impact:**
+- The lazy-loading mechanism is functionally equivalent but structurally simpler.
+- No type-level guarantee that the loaded module has the expected stream functions (would only be caught at runtime).
+- The `_load_provider_module()` function uses `asyncio.ensure_future()` for fire-and-forget module loading, matching the upstream's `void loadModule().then(...)` pattern.
+
+---
+
+## 16. UsageCost/ModelCost Named-Type Extraction
+
+**Upstream:** Cost structures are defined as inline anonymous types within their parent interfaces:
+
+```typescript
+// In Usage
+cost: {
+    input: number;
+    output: number;
+    cacheRead: number;
+    cacheWrite: number;
+    total: number;
+};
+
+// In Model
+cost: {
+    input: number;    // $/million tokens
+    output: number;
+    cacheRead: number;
+    cacheWrite: number;
+};
+```
+
+**Decision:** Extracted as named `@dataclass` classes:
+
+```python
+@dataclass
+class UsageCost:
+    input: float = 0.0
+    output: float = 0.0
+    cache_read: float = 0.0
+    cache_write: float = 0.0
+    total: float = 0.0
+
+@dataclass
+class ModelCost:
+    input: float
+    output: float
+    cache_read: float
+    cache_write: float
+```
+
+**Rationale:**
+- Python's `@dataclass` encourages named types for structured data.
+- `UsageCost` and `ModelCost` are reused in multiple places (e.g., `Usage.cost`, `calculate_cost()` return type, proxy event deserialization).
+- Named types improve readability in type annotations and IDE hover documentation.
+- `UsageCost` is exported from `__init__.py` for consumer use; `ModelCost` is also exported.
+
+**Impact:**
+- `UsageCost` and `ModelCost` are public API surface that doesn't exist as separate types in upstream.
+- The upstream's inline types have slightly different shapes: `Usage.cost` has a `total` field, `Model.cost` does not.
+
+---
+
+## 17. OAuth Type Adaptations
+
+### 17a. OAuthCredentials Index Signature → Explicit extra Field
+
+**Upstream:** `OAuthCredentials` uses a TypeScript index signature to allow arbitrary string keys:
+
+```typescript
+export type OAuthCredentials = {
+    refresh: string;
+    access: string;
+    expires: number;
+    [key: string]: unknown;
+};
+```
+
+**Decision:** An explicit `extra: dict[str, Any]` field with a default factory:
+
+```python
+@dataclass
+class OAuthCredentials:
+    refresh: str
+    access: str
+    expires: int
+    extra: dict[str, Any] = field(default_factory=dict)
+```
+
+**Rationale:**
+- Python dataclasses cannot have index signatures.
+- The `extra` field makes the additional data explicit and typed.
+
+**Impact:**
+- Code that accesses arbitrary keys on credentials must use `credentials.extra["key"]` instead of `credentials["key"]`.
+- The `extra` field defaults to an empty dict, maintaining backward compatibility.
+
+### 17b. OAuthProviderInterface Optional Fields
+
+**Upstream:** `OAuthProviderInterface` has optional methods and properties:
+
+```typescript
+export interface OAuthProviderInterface {
+    usesCallbackServer?: boolean;
+    modifyModels?(models: Model<Api>[], credentials: OAuthCredentials): Model<Api>[];
+}
+```
+
+**Decision:** The `OAuthProviderInterface` is defined as a `@runtime_checkable Protocol`. Optional fields like `usesCallbackServer` and `modifyModels` are not included in the Protocol definition.
+
+**Rationale:**
+- Python Protocols only enforce required methods. Optional methods can be added but would need `hasattr()` checks at call sites.
+- `usesCallbackServer` is a metadata flag only used by the CLI, not by the core OAuth flow.
+- `modifyModels` is not yet needed by any current consumer.
+
+**Impact:**
+- `usesCallbackServer` and `modifyModels` are not accessible through the Protocol type.
+- When needed, they should be added to the Protocol definition with default implementations or handled via `hasattr()` checks.
 EOF

@@ -43,6 +43,7 @@ from .agent import Agent, AgentOptions  # noqa: F401
 # Proxy utilities (upstream: export * from "./proxy.js")
 from .proxy import (  # noqa: F401
     ProxyAssistantMessageEvent,
+    ProxyMessageEventStream,
     ProxyStreamOptions,
     stream_proxy,
 )
