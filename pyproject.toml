@@ -29,6 +29,7 @@ ignore = [
     "otter-ai/src/otter_ai/utils/oauth/__init__.py",
     "otter-agent-core/src/otter_agent_core/__init__.py",
     "otter-agent-core/tests/conftest.py",
+    "otter-ai/src/otter_ai/providers/google_gemini_cli.py",
 ]
 reportUnusedImport = "warning"
 

@@ -343,14 +343,14 @@ def map_stop_reason(reason: Any) -> StopReason:
     """
     # Handle string form
     if isinstance(reason, str):
-        return _map_stop_reason_string(reason)
+        return map_stop_reason_string(reason)
 
     # Handle enum — extract the name
     name = getattr(reason, "name", None) or str(reason).upper()
-    return _map_stop_reason_string(name)
+    return map_stop_reason_string(name)
 
 
-def _map_stop_reason_string(reason: str) -> StopReason:
+def map_stop_reason_string(reason: str) -> StopReason:
     """Map string finish reason to StopReason."""
     match reason:
         case "STOP":
