@@ -11,6 +11,7 @@ import re
 from typing import Any, Literal
 
 from otter_ai.types import (
+    AssistantMessage,
     Context,
     Model,
     StopReason,
@@ -118,7 +119,7 @@ def convert_messages(
     """
     contents: list[dict[str, Any]] = []
 
-    def normalize_tool_call_id(tool_call_id: str) -> str:
+    def normalize_tool_call_id(tool_call_id: str, _model: Model, _msg: AssistantMessage) -> str:
         if not requires_tool_call_id(model.id):
             return tool_call_id
         return re.sub(r"[^a-zA-Z0-9_-]", "_", tool_call_id)[:64]

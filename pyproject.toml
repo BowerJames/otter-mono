@@ -28,12 +28,16 @@ ignore = [
     "otter-ai/src/otter_ai/stream.py",
     "otter-ai/src/otter_ai/utils/oauth/__init__.py",
     "otter-agent-core/src/otter_agent_core/__init__.py",
+    "otter-agent-core/tests/conftest.py",
 ]
 reportUnusedImport = "warning"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = []
+testpaths = ["otter-ai/tests", "otter-agent-core/tests"]
+markers = [
+    "e2e: marks tests that hit real LLM APIs (deselect with '-m \"not e2e\"')",
+]
 
 [tool.ruff]
 target-version = "py312"
